@@ -21,15 +21,14 @@ const proseOptions = {
   link: chalk.hex("#8BE9FD").underline, // cyan underline
   href: chalk.hex("#6272A4"), // muted gray for URL
 
-  // Lists
-  listitem: chalk.hex("#F8F8F2"), // white
-  bullet: chalk.hex("#FF79C6"), // hot pink bullets
+  // Lists — use chalk.reset to not interfere with default numbering/bullets
+  listitem: chalk.reset,
 
   // Blockquotes
-  blockquote: chalk.hex("#6272A4").italic, // muted blue italic
+  blockquote: chalk.hex("#6272A4").italic,
 
   // Horizontal rule
-  hr: chalk.hex("#44475A"), // dark separator
+  hr: chalk.hex("#44475A"),
 
   // Tables
   tableOptions: {
@@ -40,18 +39,18 @@ const proseOptions = {
   },
 
   // Code blocks
-  code: chalk.hex("#F8F8F2").bgHex("#282A36"), // white on dark background
+  code: chalk.hex("#F8F8F2").bgHex("#282A36"),
 
   // Paragraph spacing
   tab: 2,
-  width: 80,
+  width: 90,
   reflowText: false,
 
   // Images
   image: chalk.hex("#6272A4").italic,
 
   // First heading gets extra emphasis
-  firstHeading: chalk.hex("#FF79C6").bold.underline, // hot pink bold underline
+  firstHeading: chalk.hex("#FF79C6").bold.underline,
 };
 
 // ── Syntax highlighting theme (inside code blocks) ───────────────────────────
