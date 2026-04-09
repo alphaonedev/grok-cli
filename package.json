@@ -1,6 +1,6 @@
 {
   "name": "grok-dev",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "An open-source AI coding agent powered by Grok, built with Bun and OpenTUI. Fork with ai-memory MCP integration and security hardening.",
   "repository": {
     "type": "git",
