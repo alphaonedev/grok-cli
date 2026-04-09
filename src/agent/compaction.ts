@@ -1,5 +1,6 @@
 import { generateText, type ModelMessage } from "ai";
 import { resolveModelRuntime, type XaiProvider } from "../grok/client";
+import { compressToolOutput } from "../utils/tool-compress";
 import { containsEncryptedReasoning } from "./reasoning";
 
 export interface CompactionSettings {
@@ -188,7 +189,10 @@ function extractToolResultText(content: unknown): string[] {
   const toolResults: string[] = [];
   for (const part of content) {
     if (!isRecord(part) || part.type !== "tool-result") continue;
-    toolResults.push(truncateForSummary(stringifyForSummary(part.output)));
+    // TOON compress first (preserves more semantic content), then truncate if still large
+    const raw = stringifyForSummary(part.output);
+    const compressed = compressToolOutput(raw) ?? raw;
+    toolResults.push(truncateForSummary(compressed));
   }
   return toolResults;
 }

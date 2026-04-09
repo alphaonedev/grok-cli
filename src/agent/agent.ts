@@ -73,6 +73,7 @@ import {
   type SandboxSettings,
 } from "../utils/settings";
 import { discoverSkills, formatSkillsForPrompt } from "../utils/skills";
+import { compressToolOutput } from "../utils/tool-compress";
 import { buildVerifyDetectPrompt, normalizeVerifyRecipe, prepareVerifySandbox } from "../verify/entrypoint";
 import { runVerifyOrchestration } from "../verify/orchestrator";
 import {
@@ -2637,7 +2638,7 @@ function toToolResult(output: unknown): ToolResult {
     };
     return {
       success: r.success,
-      output: r.output,
+      output: compressToolOutput(r.output),
       error: r.error ?? (r.success ? undefined : r.output),
       diff: r.diff,
       plan: r.plan,
@@ -2649,7 +2650,7 @@ function toToolResult(output: unknown): ToolResult {
       lspDiagnostics: r.lspDiagnostics,
     };
   }
-  return { success: true, output: String(output) };
+  return { success: true, output: compressToolOutput(String(output)) };
 }
 
 function formatSubagentActivity(toolName: string, args?: unknown): string {
