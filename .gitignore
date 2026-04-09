@@ -114,3 +114,8 @@ skills-lock.json
 
 # Secrets / credentials
 telegram-pair-code.txt
+*.pem
+*.key
+*.p12
+*.pfx
+wallet.json
