@@ -167,13 +167,9 @@ function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
 
   return (
     <box flexDirection="column" flexShrink={0} marginTop={1} marginBottom={1}>
-      <text fg={borderFg}>
-        {"┌─ "}
-        <text fg={labelFg}>{label}</text>
-        {` ${rule}`}
-      </text>
+      <text fg={borderFg}>{`┌─ ${label} ${rule}`}</text>
       {lines.map((line, i) => (
-        <box key={i} flexDirection="row">
+        <span key={i}>
           <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
             {" "}
           </text>
@@ -183,9 +179,9 @@ function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
             </text>
           ))}
           <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
-            {" "}
+            {" \n"}
           </text>
-        </box>
+        </span>
       ))}
       <text fg={borderFg}>{`└${"─".repeat(46)}`}</text>
     </box>
