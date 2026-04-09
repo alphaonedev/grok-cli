@@ -33,7 +33,8 @@ import type {
   UserPromptSubmitHookInput,
 } from "../hooks/types";
 import { shutdownWorkspaceLspManager } from "../lsp/runtime";
-import { buildMcpToolSet } from "../mcp/runtime";
+import { autoRecall, hasAiMemory, storeCompactionSummary } from "../mcp/memory";
+import { buildMcpToolSet, type McpToolBundle } from "../mcp/runtime";
 import {
   appendCompaction,
   appendMessages,
@@ -337,6 +338,36 @@ function buildSystemPrompt(
 Current working directory: ${cwd}`;
 }
 
+const MEMORY_INSTRUCTIONS = `
+
+PERSISTENT MEMORY (ai-memory MCP):
+You have access to persistent memory tools that survive across sessions. Use them proactively:
+- memory_store: Save important findings, decisions, architecture notes, and user preferences
+- memory_recall: Before complex tasks, recall relevant context from previous sessions
+- memory_search: Find specific memories by keyword
+- memory_consolidate: Merge related memories into summaries when they accumulate
+
+WHEN TO STORE:
+- Key architectural decisions or patterns discovered
+- User preferences and coding conventions
+- Important findings from code exploration
+- Bug root causes and their fixes
+- Project-specific knowledge that would be useful in future sessions
+
+WHEN TO RECALL:
+- At the start of complex tasks to check for prior context
+- When the user references something from a previous session
+- Before making architectural decisions to check for prior decisions
+
+Use the toon_compact format for recall/search to minimize token usage.`;
+
+function appendMemoryContext(system: string, memoryContext: string, hasMemory: boolean): string {
+  if (!hasMemory) return system;
+  const instructions = MEMORY_INSTRUCTIONS;
+  const recalled = memoryContext ? memoryContext : "";
+  return `${system}${instructions}${recalled}`;
+}
+
 function buildSubagentPrompt(
   request: TaskRequest,
   cwd: string,
@@ -540,6 +571,9 @@ export class Agent {
   private sendTelegramFile: ((filePath: string) => Promise<ToolResult>) | null = null;
   private batchApi = false;
   private sessionStartHookFired = false;
+  private mcpBundle: McpToolBundle | null = null;
+  private mcpConnecting: Promise<McpToolBundle | null> | null = null;
+  private memoryContext = "";
 
   constructor(
     apiKey: string | undefined,
@@ -577,6 +611,72 @@ export class Agent {
       this.messageSeqs = transcript.seqs;
       this.sessionStore.setModel(this.session.id, this.modelId);
     }
+  }
+
+  /**
+   * Connect to configured MCP servers (session-scoped).
+   * Call once after construction — the bundle is reused across all turns.
+   */
+  async connectMcp(): Promise<void> {
+    const servers = loadMcpServers();
+    if (servers.length === 0) return;
+
+    // Deduplicate concurrent calls
+    if (this.mcpConnecting) {
+      await this.mcpConnecting;
+      return;
+    }
+
+    this.mcpConnecting = (async () => {
+      try {
+        const bundle = await buildMcpToolSet(servers);
+        this.mcpBundle = bundle;
+        if (bundle.errors.length > 0) {
+          // Log but don't block — partial MCP is fine
+          for (const err of bundle.errors) {
+            console.error(`[MCP] ${err}`);
+          }
+        }
+        return bundle;
+      } catch {
+        this.mcpBundle = null;
+        return null;
+      }
+    })();
+
+    await this.mcpConnecting;
+    this.mcpConnecting = null;
+
+    // Auto-recall memories on session start if ai-memory is connected
+    if (this.mcpBundle && hasAiMemory(this.mcpBundle.tools)) {
+      this.memoryContext = await autoRecall(this.mcpBundle.tools, this.bash.getCwd());
+    }
+  }
+
+  /**
+   * Disconnect MCP servers. Called on session end / cleanup.
+   */
+  async disconnectMcp(): Promise<void> {
+    if (this.mcpBundle) {
+      await this.mcpBundle.close().catch(() => {});
+      this.mcpBundle = null;
+    }
+  }
+
+  /**
+   * Get the current MCP tool set (empty if not connected).
+   */
+  getMcpTools(): ToolSet {
+    return this.mcpBundle?.tools ?? {};
+  }
+
+  /**
+   * Check if a specific MCP server is connected (by server id prefix).
+   */
+  hasMcpServer(serverId: string): boolean {
+    if (!this.mcpBundle) return false;
+    const prefix = `mcp_${serverId.replace(/[^a-zA-Z0-9_-]/g, "_")}__`;
+    return Object.keys(this.mcpBundle.tools).some((name) => name.startsWith(prefix));
   }
 
   getModel(): string {
@@ -1132,7 +1232,6 @@ export class Agent {
     let assistantText = "";
     let lastActivity = initialDetail;
     let childTools: ToolSet = childBaseTools;
-    let closeMcp: (() => Promise<void>) | undefined;
     const childModelId = normalizeModelId(
       isVision
         ? VISION_MODEL
@@ -1174,13 +1273,11 @@ export class Agent {
     onActivity?.(initialDetail);
 
     try {
-      if (childMode === "agent" && childRuntime.modelInfo?.supportsClientTools !== false) {
-        const mcpBundle = await buildMcpToolSet(loadMcpServers());
-        closeMcp = mcpBundle.close;
-        childTools = { ...childBaseTools, ...mcpBundle.tools };
-        if (mcpBundle.errors.length > 0) {
-          lastActivity = `MCP unavailable: ${mcpBundle.errors.join(" | ")}`;
-          onActivity?.(lastActivity);
+      // Reuse session-scoped MCP bundle (available in all modes, not just agent)
+      if (childRuntime.modelInfo?.supportsClientTools !== false) {
+        const mcpTools = this.getMcpTools();
+        if (Object.keys(mcpTools).length > 0) {
+          childTools = { ...childBaseTools, ...mcpTools };
         }
       }
 
@@ -1273,7 +1370,7 @@ export class Agent {
         },
       };
     } finally {
-      await closeMcp?.().catch(() => {});
+      // MCP cleanup handled at session level via disconnectMcp()
     }
   }
 
@@ -1455,6 +1552,12 @@ export class Agent {
     };
     await this.fireHook(postCompactInput, signal).catch(() => {});
 
+    // Store compaction summary as memory (if ai-memory is connected)
+    const mcpTools = this.getMcpTools();
+    if (hasAiMemory(mcpTools)) {
+      storeCompactionSummary(mcpTools, summary, this.bash.getCwd(), this.session?.id).catch(() => {});
+    }
+
     return true;
   }
 
@@ -1472,7 +1575,6 @@ export class Agent {
     let attemptedOverflowRecovery = false;
 
     while (true) {
-      let closeMcp: (() => Promise<void>) | undefined;
       const turnMessages: ModelMessage[] = [];
       const totalUsage: ProcessMessageUsage = {};
 
@@ -1507,12 +1609,11 @@ export class Agent {
           sessionId: this.session?.id ?? undefined,
         });
         let tools: ToolSet = runtime.modelInfo?.supportsClientTools === false ? {} : baseTools;
-        if (this.mode === "agent" && runtime.modelInfo?.supportsClientTools !== false) {
-          const mcpBundle = await buildMcpToolSet(loadMcpServers());
-          closeMcp = mcpBundle.close;
-          tools = { ...baseTools, ...mcpBundle.tools };
-          if (mcpBundle.errors.length > 0) {
-            yield { type: "content", content: `MCP unavailable: ${mcpBundle.errors.join(" | ")}\n\n` };
+        // Session-scoped MCP: reuse bundle across turns, available in all modes
+        if (runtime.modelInfo?.supportsClientTools !== false) {
+          const mcpTools = this.getMcpTools();
+          if (Object.keys(mcpTools).length > 0) {
+            tools = { ...baseTools, ...mcpTools };
           }
         }
 
@@ -1671,7 +1772,7 @@ export class Agent {
         yield { type: "done" };
         return;
       } finally {
-        await closeMcp?.().catch(() => {});
+        // MCP cleanup handled at session level via disconnectMcp()
       }
     }
   }
@@ -1741,16 +1842,20 @@ export class Agent {
 
     const provider = this.requireProvider();
     const subagents = loadValidSubAgents();
-    const system = applyModelConstraints(
-      buildSystemPrompt(
-        this.bash.getCwd(),
-        this.mode,
-        this.bash.getSandboxMode(),
-        this.planContext,
-        subagents,
-        this.bash.getSandboxSettings(),
+    const system = appendMemoryContext(
+      applyModelConstraints(
+        buildSystemPrompt(
+          this.bash.getCwd(),
+          this.mode,
+          this.bash.getSandboxMode(),
+          this.planContext,
+          subagents,
+          this.bash.getSandboxSettings(),
+        ),
+        this.modelId,
       ),
-      this.modelId,
+      this.memoryContext,
+      hasAiMemory(this.getMcpTools()),
     );
     const runtime = resolveModelRuntime(provider, this.modelId);
     const modelInfo = runtime.modelInfo;
@@ -1783,7 +1888,6 @@ export class Agent {
         let reasoningPreview = "";
         let encryptedReasoningHidden = false;
         let streamOk = false;
-        let closeMcp: (() => Promise<void>) | undefined;
         let stepNumber = -1;
         const activeToolCalls: ToolCall[] = [];
 
@@ -1814,12 +1918,11 @@ export class Agent {
             sessionId: this.session?.id ?? undefined,
           });
           let tools: ToolSet = runtime.modelInfo?.supportsClientTools === false ? {} : baseTools;
-          if (this.mode === "agent" && runtime.modelInfo?.supportsClientTools !== false) {
-            const mcpBundle = await buildMcpToolSet(loadMcpServers());
-            closeMcp = mcpBundle.close;
-            tools = { ...baseTools, ...mcpBundle.tools };
-            if (mcpBundle.errors.length > 0) {
-              yield { type: "content", content: `MCP unavailable: ${mcpBundle.errors.join(" | ")}\n\n` };
+          // Session-scoped MCP: reuse bundle across turns, available in all modes
+          if (runtime.modelInfo?.supportsClientTools !== false) {
+            const mcpTools = this.getMcpTools();
+            if (Object.keys(mcpTools).length > 0) {
+              tools = { ...baseTools, ...mcpTools };
             }
           }
 
@@ -2079,7 +2182,7 @@ export class Agent {
           yield { type: "done" };
           return;
         } finally {
-          await closeMcp?.().catch(() => {});
+          // MCP cleanup handled at session level via disconnectMcp()
         }
       }
     } finally {

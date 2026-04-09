@@ -62,6 +62,7 @@ async function startInteractive(
   initialMessage?: string,
 ) {
   const agent = new Agent(apiKey, baseURL, model, maxToolRounds, { session, sandboxMode, sandboxSettings, batchApi });
+  await agent.connectMcp();
   const { createCliRenderer } = await import("@opentui/core");
   const { createRoot } = await import("@opentui/react");
   const { createElement } = await import("react");
@@ -119,6 +120,7 @@ async function runHeadless(
     sandboxSettings,
     batchApi,
   });
+  await agent.connectMcp();
   const prelude = renderHeadlessPrelude(format, agent.getSessionId() || undefined);
   if (prelude.stdout) process.stdout.write(prelude.stdout);
   if (prelude.stderr) process.stderr.write(prelude.stderr);
@@ -202,6 +204,7 @@ async function runBackgroundDelegation(jobPath: string, options: CliOptions) {
       sandboxSettings,
       batchApi: Boolean(delegation.batchApi ?? options.batchApi === true),
     });
+    await agent.connectMcp();
     const result = await agent.runTaskRequest({
       agent: delegation.agent,
       description: delegation.description,
