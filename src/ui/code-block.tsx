@@ -1,20 +1,21 @@
 /**
- * CodeBlock component — syntax-highlighted code using native OpenTUI elements.
+ * CodeBlock — syntax-highlighted code using native OpenTUI elements.
  *
- * Uses <text> with <span> children for per-token coloring.
- * No ANSI escape codes. No tree-sitter. Works in every terminal.
+ * Clean design: language label on top, dark background, left accent bar,
+ * no right border. Matches Claude Code's code block style.
  */
 
 import { RGBA } from "@opentui/core";
 
-const COLORS = {
+const C = {
   keyword: "#c678dd",
   string: "#98c379",
   number: "#d19a66",
   comment: "#5c6370",
   default: "#abb2bf",
-  bg: "#1a1a1a",
-  border: "#333333",
+  bg: "#1e1e1e",
+  accent: "#3b3b3b",
+  label: "#6a6a6a",
 };
 
 const KEYWORD_RE =
@@ -28,63 +29,43 @@ interface Token {
 function tokenize(line: string): Token[] {
   const tokens: Token[] = [];
   let last = 0;
-  let m: RegExpExecArray | null;
-
   KEYWORD_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
   // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
   while ((m = KEYWORD_RE.exec(line)) !== null) {
-    if (m.index > last) {
-      tokens.push({ text: line.slice(last, m.index), color: COLORS.default });
-    }
+    if (m.index > last) tokens.push({ text: line.slice(last, m.index), color: C.default });
     const [match, quote, keyword, number] = m;
-    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!"))) {
-      tokens.push({ text: match, color: COLORS.comment });
-    } else if (quote) {
-      tokens.push({ text: match, color: COLORS.string });
-    } else if (keyword) {
-      tokens.push({ text: match, color: COLORS.keyword });
-    } else if (number) {
-      tokens.push({ text: match, color: COLORS.number });
-    } else {
-      tokens.push({ text: match, color: COLORS.default });
-    }
+    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!")))
+      tokens.push({ text: match, color: C.comment });
+    else if (quote) tokens.push({ text: match, color: C.string });
+    else if (keyword) tokens.push({ text: match, color: C.keyword });
+    else if (number) tokens.push({ text: match, color: C.number });
+    else tokens.push({ text: match, color: C.default });
     last = KEYWORD_RE.lastIndex;
   }
-  if (last < line.length) {
-    tokens.push({ text: line.slice(last), color: COLORS.default });
-  }
-  if (tokens.length === 0) {
-    tokens.push({ text: " ", color: COLORS.default });
-  }
+  if (last < line.length) tokens.push({ text: line.slice(last), color: C.default });
+  if (tokens.length === 0) tokens.push({ text: " ", color: C.default });
   return tokens;
 }
 
-const bgColor = RGBA.fromHex(COLORS.bg);
-const borderFg = RGBA.fromHex(COLORS.border);
-const defaultFg = RGBA.fromHex(COLORS.default);
+const bg = RGBA.fromHex(C.bg);
+const accent = RGBA.fromHex(C.accent);
+const labelFg = RGBA.fromHex(C.label);
+const defaultFg = RGBA.fromHex(C.default);
 
 export function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
-  const label = lang || "code";
-
   return (
     <box flexDirection="column" flexShrink={0}>
-      <text fg={borderFg}>{`  ┌─ ${label} ${"─".repeat(Math.max(1, 58 - label.length))}┐`}</text>
-      {lines.map((line, i) => {
-        const tokens = tokenize(line);
-        const textLen = tokens.reduce((sum, tok) => sum + tok.text.length, 0);
-        const pad = Math.max(1, 62 - textLen);
-        return (
-          <text key={`cl-${i}`} bg={bgColor} fg={defaultFg}>
-            {tokens.map((tok, j) => (
-              <span key={`t-${j}`} fg={RGBA.fromHex(tok.color)}>
-                {j === 0 ? `  │ ${tok.text}` : tok.text}
-              </span>
-            ))}
-            <span>{" ".repeat(pad)}│</span>
-          </text>
-        );
-      })}
-      <text fg={borderFg}>{`  └${"─".repeat(63)}┘`}</text>
+      <text fg={labelFg} bg={accent}>{`  ${lang || "code"}  `}</text>
+      {lines.map((line, i) => (
+        <text key={`cl-${i}`} bg={bg} fg={defaultFg}>
+          {tokenize(line).map((tok, j) => (
+            <span key={`t-${j}`} fg={RGBA.fromHex(tok.color)}>
+              {j === 0 ? `  ${tok.text}` : tok.text}
+            </span>
+          ))}
+        </text>
+      ))}
     </box>
   );
 }
