@@ -1,90 +1,129 @@
 /**
  * Markdown component — hybrid rendering.
  *
- * OpenTUI's <markdown> handles: headers, bold, italic, lists, tables,
- * links, blockquotes, horizontal rules (via tree-sitter concealment).
+ * Splits content into markdown chunks and code blocks.
+ * - Markdown chunks → OpenTUI <markdown> (headers, bold, italic, lists, tables, links)
+ * - Code blocks → native OpenTUI <text> elements with fg/bg color props
  *
- * Code blocks are pre-rendered with our ANSI syntax highlighter
- * (terminal-markdown.ts) because OpenTUI's tree-sitter language
- * injection only supports JS/TS/Zig. We support 25+ languages.
- *
- * The pre-processed content replaces fenced code blocks with
- * indented code (which OpenTUI renders as monospace without
- * attempting tree-sitter injection), with ANSI colors already applied.
+ * This bypasses OpenTUI's broken tree-sitter language injection
+ * (only JS/TS/Zig load) while keeping everything else working.
  */
 
 import { RGBA, SyntaxStyle } from "@opentui/core";
 import { useMemo } from "react";
 import type { Theme } from "./theme";
 
-// ANSI codes for code block highlighting
-const ESC = "\x1b";
-const RESET = `${ESC}[0m`;
-const GRAY = `${ESC}[90m`;
-const GREEN = `${ESC}[32m`;
-const YELLOW = `${ESC}[33m`;
-const MAGENTA = `${ESC}[35m`;
-const BG_DARK = `${ESC}[48;5;236m`;
+// Code highlighting colors (One Dark theme)
+const C = {
+  keyword: "#c678dd",
+  string: "#98c379",
+  number: "#d19a66",
+  comment: "#5c6370",
+  function: "#61afef",
+  operator: "#56b6c2",
+  type: "#e5c07b",
+  default: "#abb2bf",
+  bg: "#1a1a1a",
+  border: "#333333",
+  label: "#5c6370",
+};
 
-function highlightCode(code: string): string {
-  const TOKEN =
-    /\/\/.*$|#!.*$|#.*$|\/\*[\s\S]*?\*\/|(["'`])(?:(?!\1).)*?\1|\b(const|let|var|function|return|if|else|elif|for|while|import|export|from|class|new|async|await|try|catch|throw|typeof|instanceof|interface|type|enum|extends|implements|public|private|protected|static|readonly|abstract|override|def|self|True|False|None|fn|mut|pub|use|mod|struct|impl|trait|match|loop|package|main|func|go|chan|defer|select|case|switch|break|continue|range|map|nil|string|int|float|bool|void|char|double|long|short|unsigned|signed|extern|volatile|register|union|template|namespace|using|virtual|final|super|this|yield|with|as|in|is|not|and|or|lambda|pass|raise|except|finally|global|nonlocal|assert|del|print|puts|require|module|begin|end|rescue|ensure|do|then|elsif|unless|until|when|next|redo|retry|proc|val|var|object|sealed|lazy|override|implicit|where|let|rec|open|include|sig|functor)\b|\b(\d+\.?\d*)\b/gm;
-
-  return code.replace(TOKEN, (match, quote, keyword, number) => {
-    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!")))
-      return `${GRAY}${match}${RESET}${BG_DARK}`;
-    if (quote) return `${GREEN}${match}${RESET}${BG_DARK}`;
-    if (keyword) return `${MAGENTA}${match}${RESET}${BG_DARK}`;
-    if (number) return `${YELLOW}${match}${RESET}${BG_DARK}`;
-    return match;
-  });
+interface Token {
+  text: string;
+  color: string;
 }
 
-/**
- * Pre-process markdown: extract fenced code blocks and replace with
- * ANSI-highlighted indented code. OpenTUI renders indented code as
- * monospace without tree-sitter injection.
- */
-function preprocessCodeBlocks(md: string): string {
-  const lines = md.split("\n");
-  const output: string[] = [];
-  let inCodeBlock = false;
-  let codeBlockLang = "";
+function tokenizeLine(line: string): Token[] {
+  const tokens: Token[] = [];
+  const TOKEN =
+    /\/\/.*$|#!.*$|#.*$|\/\*[\s\S]*?\*\/|(["'`])(?:(?!\1).)*?\1|\b(const|let|var|function|return|if|else|elif|for|while|import|export|from|class|new|async|await|try|catch|throw|typeof|instanceof|interface|type|enum|extends|implements|public|private|protected|static|readonly|abstract|override|def|self|True|False|None|fn|mut|pub|use|mod|struct|impl|trait|match|loop|package|main|func|go|chan|defer|select|case|switch|break|continue|range|nil|void|char|double|long|short|unsigned|extern|union|template|namespace|using|virtual|final|super|this|yield|with|as|in|is|not|and|or|lambda|pass|raise|except|finally|global|assert|del|puts|require|module|begin|end|rescue|ensure|do|then|elsif|unless|until|when|val|object|sealed|lazy|where|rec|open|include|sig|functor|print|println|fmt|string|int|float|bool|map)\b|\b(\d+\.?\d*)\b/gm;
+
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
+  while ((m = TOKEN.exec(line)) !== null) {
+    // Text before this match
+    if (m.index > lastIndex) {
+      tokens.push({ text: line.slice(lastIndex, m.index), color: C.default });
+    }
+
+    const [match, quote, keyword, number] = m;
+    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!"))) {
+      tokens.push({ text: match, color: C.comment });
+    } else if (quote) {
+      tokens.push({ text: match, color: C.string });
+    } else if (keyword) {
+      tokens.push({ text: match, color: C.keyword });
+    } else if (number) {
+      tokens.push({ text: match, color: C.number });
+    } else {
+      tokens.push({ text: match, color: C.default });
+    }
+
+    lastIndex = TOKEN.lastIndex;
+  }
+
+  // Remaining text
+  if (lastIndex < line.length) {
+    tokens.push({ text: line.slice(lastIndex), color: C.default });
+  }
+
+  if (tokens.length === 0) {
+    tokens.push({ text: " ", color: C.default });
+  }
+
+  return tokens;
+}
+
+interface Chunk {
+  type: "markdown" | "codeblock";
+  content: string;
+  lang?: string;
+  lines?: string[];
+}
+
+function splitContent(content: string): Chunk[] {
+  const chunks: Chunk[] = [];
+  const lines = content.split("\n");
+  let mdLines: string[] = [];
   let codeLines: string[] = [];
+  let inCode = false;
+  let codeLang = "";
 
   for (const line of lines) {
     if (line.trimStart().startsWith("```")) {
-      if (inCodeBlock) {
-        // End code block — render highlighted
-        // Leading space on every line prevents OpenTUI from consuming the first visible character
-        const lang = codeBlockLang || "code";
-        const header = ` ${GRAY}┌─ ${lang} ${"─".repeat(Math.max(0, 40 - lang.length))}${RESET}`;
-        const footer = ` ${GRAY}└${"─".repeat(44)}${RESET}`;
-        output.push(header);
-        for (const cl of codeLines) {
-          // Ensure empty lines still show dark background
-          const content = cl || " ";
-          output.push(` ${BG_DARK} ${highlightCode(content)} ${RESET}`);
-        }
-        output.push(footer);
-        inCodeBlock = false;
+      if (inCode) {
+        // End code block
+        chunks.push({ type: "codeblock", content: "", lang: codeLang, lines: codeLines });
         codeLines = [];
-        codeBlockLang = "";
+        codeLang = "";
+        inCode = false;
       } else {
-        inCodeBlock = true;
-        codeBlockLang = line.trim().slice(3).trim();
+        // Start code block — flush markdown
+        if (mdLines.length > 0) {
+          chunks.push({ type: "markdown", content: mdLines.join("\n") });
+          mdLines = [];
+        }
+        inCode = true;
+        codeLang = line.trim().slice(3).trim();
       }
       continue;
     }
 
-    if (inCodeBlock) {
+    if (inCode) {
       codeLines.push(line);
     } else {
-      output.push(line);
+      mdLines.push(line);
     }
   }
 
-  return output.join("\n");
+  // Flush remaining
+  if (mdLines.length > 0) {
+    chunks.push({ type: "markdown", content: mdLines.join("\n") });
+  }
+
+  return chunks;
 }
 
 function buildSyntaxStyle(t: Theme): SyntaxStyle {
@@ -119,19 +158,62 @@ const TABLE_OPTIONS = {
   borderColor: "#333333",
 };
 
-export function Markdown({ content, t }: { content: string; t: Theme }) {
-  const syntaxStyle = useMemo(() => buildSyntaxStyle(t), [t]);
-  const processed = useMemo(() => preprocessCodeBlocks(content), [content]);
+function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
+  const borderFg = RGBA.fromHex(C.border);
+  const bgColor = RGBA.fromHex(C.bg);
+  const labelFg = RGBA.fromHex(C.label);
+  const label = lang || "code";
+  const rule = "─".repeat(Math.max(0, 44 - label.length));
 
   return (
-    <markdown
-      content={processed}
-      syntaxStyle={syntaxStyle}
-      conceal={true}
-      // @ts-expect-error MarkdownProps omits inherited Renderable.selectable; needed for TUI text selection
-      selectable={true}
-      tableOptions={TABLE_OPTIONS}
-      flexShrink={0}
-    />
+    <box flexDirection="column" flexShrink={0} marginTop={1} marginBottom={1}>
+      <text fg={borderFg}>
+        {"┌─ "}
+        <text fg={labelFg}>{label}</text>
+        {` ${rule}`}
+      </text>
+      {lines.map((line, i) => (
+        <box key={i} flexDirection="row">
+          <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
+            {" "}
+          </text>
+          {tokenizeLine(line).map((tok, j) => (
+            <text key={j} fg={RGBA.fromHex(tok.color)} bg={bgColor}>
+              {tok.text}
+            </text>
+          ))}
+          <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
+            {" "}
+          </text>
+        </box>
+      ))}
+      <text fg={borderFg}>{`└${"─".repeat(46)}`}</text>
+    </box>
+  );
+}
+
+export function Markdown({ content, t }: { content: string; t: Theme }) {
+  const syntaxStyle = useMemo(() => buildSyntaxStyle(t), [t]);
+  const chunks = useMemo(() => splitContent(content), [content]);
+
+  return (
+    <box flexDirection="column" flexShrink={0}>
+      {chunks.map((chunk, i) =>
+        chunk.type === "markdown" ? (
+          <markdown
+            key={i}
+            content={chunk.content}
+            syntaxStyle={syntaxStyle}
+            conceal={true}
+            // @ts-expect-error MarkdownProps omits inherited Renderable.selectable
+            selectable={true}
+            tableOptions={TABLE_OPTIONS}
+            flexShrink={0}
+          />
+        ) : (
+          <CodeBlock key={i} lang={chunk.lang || ""} lines={chunk.lines || []} />
+        ),
+      )}
+    </box>
   );
 }
