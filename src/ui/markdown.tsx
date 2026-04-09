@@ -56,11 +56,15 @@ function preprocessCodeBlocks(md: string): string {
     if (line.trimStart().startsWith("```")) {
       if (inCodeBlock) {
         // End code block — render highlighted
-        const header = `${GRAY}┌─ ${codeBlockLang || "code"} ${"─".repeat(Math.max(0, 40 - (codeBlockLang || "code").length))}${RESET}`;
-        const footer = `${GRAY}└${"─".repeat(44)}${RESET}`;
+        // Leading space on every line prevents OpenTUI from consuming the first visible character
+        const lang = codeBlockLang || "code";
+        const header = ` ${GRAY}┌─ ${lang} ${"─".repeat(Math.max(0, 40 - lang.length))}${RESET}`;
+        const footer = ` ${GRAY}└${"─".repeat(44)}${RESET}`;
         output.push(header);
         for (const cl of codeLines) {
-          output.push(`${BG_DARK} ${highlightCode(cl)} ${RESET}`);
+          // Ensure empty lines still show dark background
+          const content = cl || " ";
+          output.push(` ${BG_DARK} ${highlightCode(content)} ${RESET}`);
         }
         output.push(footer);
         inCodeBlock = false;
