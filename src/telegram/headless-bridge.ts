@@ -96,6 +96,9 @@ function buildTelegramAgentFactory(startupConfig: TelegramHeadlessStartupConfig)
       });
     }
 
+    // Connect MCP servers (session-scoped, non-blocking)
+    agent.connectMcp().catch(() => {});
+
     agents.set(userId, agent);
     return agent;
   };

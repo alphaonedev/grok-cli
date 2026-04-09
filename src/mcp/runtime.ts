@@ -31,6 +31,64 @@ export interface McpToolBundle {
   close(): Promise<void>;
 }
 
+// Built-in tool names that MCP servers must not override
+const RESERVED_TOOL_NAMES = new Set([
+  "bash",
+  "read_file",
+  "write_file",
+  "edit_file",
+  "search_web",
+  "search_x",
+  "generate_image",
+  "generate_video",
+  "task",
+  "delegate",
+  "delegation_read",
+  "delegation_list",
+  "process_list",
+  "process_logs",
+  "process_stop",
+  "lsp",
+  "computer_snapshot",
+  "computer_screenshot",
+  "computer_click",
+  "computer_type",
+  "computer_press",
+  "computer_scroll",
+  "computer_launch",
+  "computer_list_windows",
+  "computer_focus_window",
+  "computer_get",
+  "computer_wait",
+  "computer_mouse_move",
+  "schedule_create",
+  "schedule_list",
+  "schedule_remove",
+  "schedule_read_log",
+  "schedule_daemon_status",
+  "schedule_daemon_start",
+  "schedule_daemon_stop",
+  "wallet_info",
+  "wallet_history",
+  "fetch_payment_info",
+  "paid_request",
+]);
+
+/**
+ * Sanitize MCP tool description to prevent prompt injection.
+ * Strips control patterns and caps length.
+ */
+function sanitizeDescription(label: string, description: string | undefined, name: string): string {
+  const raw = description ?? name;
+  // Strip common prompt injection patterns
+  const cleaned = raw
+    .replace(/ignore\s+(previous|all|above)\s+instructions?/gi, "[filtered]")
+    .replace(/you\s+(are|must|should|will)\s+now/gi, "[filtered]")
+    .replace(/system\s*:/gi, "[filtered]")
+    .slice(0, 500); // Cap at 500 chars
+  return `[MCP ${label}] ${cleaned}`;
+}
+
 export async function buildMcpToolSet(servers: McpServerConfig[]): Promise<McpToolBundle> {
   const tools: ToolSet = {};
   const errors: string[] = [];
@@ -57,10 +115,15 @@ export async function buildMcpToolSet(servers: McpServerConfig[]): Promise<McpTo
       const prefix = mcpToolPrefix(server);
 
       for (const [name, tool] of Object.entries(mcpTools)) {
+        // Prevent MCP tools from overriding built-in tools
+        if (RESERVED_TOOL_NAMES.has(name)) {
+          errors.push(`${server.label}: tool "${name}" conflicts with built-in, skipped`);
+          continue;
+        }
         const prefixedName = `${prefix}__${name}`;
         tools[prefixedName] = {
           ...tool,
-          description: `[MCP ${server.label}] ${tool.description ?? name}`,
+          description: sanitizeDescription(server.label, tool.description, name),
         };
       }
     } catch (error: unknown) {

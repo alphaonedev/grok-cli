@@ -40,7 +40,7 @@ export async function autoRecall(tools: ToolSet, cwd: string): Promise<string> {
         limit: 5,
         format: "toon_compact",
       },
-      { toolCallId: "auto-recall", messages: [], abortSignal: undefined as unknown as AbortSignal },
+      { toolCallId: "auto-recall", messages: [], abortSignal: new AbortController().signal },
     );
 
     const output = typeof result === "string" ? result : JSON.stringify(result);
@@ -76,11 +76,11 @@ export async function storeCompactionSummary(
         content: summary.slice(0, 4000), // Cap at 4K chars
         tier: "mid",
         namespace: projectName,
-        tags: JSON.stringify(["compaction", "session-context", projectName]),
+        tags: ["compaction", "session-context", projectName],
         source: "claude",
         priority: 4,
       },
-      { toolCallId: "auto-compaction-store", messages: [], abortSignal: undefined as unknown as AbortSignal },
+      { toolCallId: "auto-compaction-store", messages: [], abortSignal: new AbortController().signal },
     );
   } catch {
     // Silent failure — compaction store is best-effort

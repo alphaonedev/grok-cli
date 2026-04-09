@@ -632,7 +632,6 @@ export class Agent {
         const bundle = await buildMcpToolSet(servers);
         this.mcpBundle = bundle;
         if (bundle.errors.length > 0) {
-          // Log but don't block — partial MCP is fine
           for (const err of bundle.errors) {
             console.error(`[MCP] ${err}`);
           }
@@ -641,11 +640,12 @@ export class Agent {
       } catch {
         this.mcpBundle = null;
         return null;
+      } finally {
+        this.mcpConnecting = null;
       }
     })();
 
     await this.mcpConnecting;
-    this.mcpConnecting = null;
 
     // Auto-recall memories on session start if ai-memory is connected
     if (this.mcpBundle && hasAiMemory(this.mcpBundle.tools)) {
@@ -807,7 +807,11 @@ export class Agent {
   }
 
   async cleanup(): Promise<void> {
-    await Promise.allSettled([this.bash.cleanup(), shutdownWorkspaceLspManager(this.bash.getCwd())]);
+    await Promise.allSettled([
+      this.disconnectMcp(),
+      this.bash.cleanup(),
+      shutdownWorkspaceLspManager(this.bash.getCwd()),
+    ]);
   }
 
   respondToToolApproval(approvalId: string, approved: boolean): void {
