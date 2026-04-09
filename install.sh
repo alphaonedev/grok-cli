@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP="grok"
-REPO="superagent-ai/grok-cli"
+REPO="alphaonedev/grok-cli"
 RELEASES_API="https://api.github.com/repos/${REPO}/releases"
 USER_DIR="${HOME}/.grok"
 INSTALL_DIR="${USER_DIR}/bin"
@@ -20,8 +20,8 @@ usage() {
 Install Grok from GitHub Releases.
 
 Usage:
-  curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash
-  curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash -s -- --version 1.1.4
+  curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash -s -- --version 1.1.4
   bash install.sh --binary /path/to/grok
 
 Options:
