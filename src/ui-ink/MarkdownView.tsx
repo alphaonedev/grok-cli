@@ -48,17 +48,11 @@ const md = new Marked(
   ),
 );
 
-function cleanLinks(text: string): string {
-  // "Link Text (https://example.com)" → "Link Text"
-  // Keep the styled link text, remove the raw URL in parens
-  return text.replace(/ \(https?:\/\/[^)]+\)/g, "");
-}
-
 export function MarkdownView({ content }: { content: string }) {
   const rendered = useMemo(() => {
     if (!content) return "";
     try {
-      return cleanLinks(md.parse(content) as string);
+      return md.parse(content) as string;
     } catch {
       return content;
     }
