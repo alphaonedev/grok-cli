@@ -6,7 +6,7 @@
 import { Box, Text, useApp, useInput, useStdout } from "ink";
 import Spinner from "ink-spinner";
 import TextInput from "ink-text-input";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Agent } from "../agent/agent";
 import type { StreamChunk, ToolCall, ToolResult } from "../types/index";
 import { MarkdownView } from "./MarkdownView";
@@ -164,12 +164,17 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
       // Always prefer pastedText (full content) over display text
       const actualText = pastedText || inputText;
       if (!actualText.trim()) return;
+
+      // If there was additional typed text after the paste label, prepend it
+      const typedAfterPaste = pastedText ? inputDisplay.replace(/\[Pasted.*?\].*?—.*?send\s*/, "").trim() : "";
+      const fullMessage = typedAfterPaste ? `${typedAfterPaste}\n\n${pastedText}` : actualText;
+
       setInputText("");
       setInputDisplay("");
       setPastedText("");
-      processMessage(actualText);
+      processMessage(fullMessage);
     },
-    [isProcessing, processMessage, inputText, pastedText],
+    [isProcessing, processMessage, inputText, pastedText, inputDisplay.replace],
   );
 
   // Show last N messages that fit
