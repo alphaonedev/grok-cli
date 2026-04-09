@@ -16,7 +16,7 @@ Fork of [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) with
 - **Security hardening** --- MCP tool name collision prevention, description sanitization, proper cleanup
 - **10 custom sub-agents** --- architect, code-review, debug, implement, refactor, test-writer, docs, quick-fix, data-ops, security-audit
 
-Real-time **X search**, **web search**, the full Grok model lineup (grok-4.20, grok-4-1-fast), **sub-agents on by default**, **remote control via Telegram**, and a terminal UI built with **Bun** and **OpenTUI**.
+Real-time **X search**, **web search**, the full Grok model lineup (grok-4.20, grok-4-1-fast), **sub-agents on by default**, **remote control via Telegram**, and a terminal UI built with **Bun** and **Ink**.
 
 Community-built and unofficial. Not affiliated with or endorsed by xAI.
 
@@ -66,7 +66,7 @@ grok uninstall --keep-config
 ### Prerequisites
 
 - **Grok API key** from [x.ai](https://x.ai)
-- Modern terminal emulator for the interactive OpenTUI experience
+- Modern terminal emulator for the interactive Ink experience
 - Headless `--prompt` mode does not depend on terminal UI support
 - For host desktop automation via the computer sub-agent, enable **Accessibility** permission for your terminal app on macOS
 
@@ -173,7 +173,7 @@ The agent will automatically recall relevant memories on session start and store
 
 ## Run it
 
-**Interactive (default)** — launches the OpenTUI coding agent:
+**Interactive (default)** — launches the Ink coding agent:
 
 ```bash
 grok
@@ -181,7 +181,7 @@ grok
 
 ### Supported terminals
 
-For the most reliable interactive OpenTUI experience, use a modern terminal emulator. We currently document and recommend:
+For the most reliable interactive Ink experience, use a modern terminal emulator. We currently document and recommend:
 
 - **WezTerm** (cross-platform)
 - **Alacritty** (cross-platform)
@@ -313,7 +313,7 @@ You keep using a text model for the session, and Grok saves generated media unde
 | **Computer use**                  | Built-in `**computer`** sub-agent for host desktop automation via `**agent-desktop**`. It prefers semantic accessibility snapshots and stable refs, with screenshots saved under `**.grok/computer/**` when requested.     |
 | **Custom sub-agents**             | Define named agents with `**subAgents`** in `**~/.grok/user-settings.json**` and manage them from the TUI with `**/agents**`.                                                                                              |
 | **Remote control**                | Pair **Telegram** from the TUI (`/remote-control` → Telegram): DM your bot, `**/pair`**, approve the code in-terminal. Keep the CLI running while you ping it from your phone.                                             |
-| **No “mystery meat” UI**          | OpenTUI React terminal UI—fast, keyboard-driven, not whatever glitchy thing you’re thinking of.                                                                                                                            |
+| **No “mystery meat” UI**          | Ink React terminal UI—fast, keyboard-driven, not whatever glitchy thing you’re thinking of.                                                                                                                            |
 | **Skills**                        | Agent Skills under `**.agents/skills/<name>/SKILL.md`** (project) or `**~/.agents/skills/**` (user). Use `**/skills**` in the TUI to list what’s installed.                                                                |
 | **MCPs**                          | Extend with Model Context Protocol servers—configure via `**/mcps`** in the TUI or `**.grok/settings.json**` (`mcpServers`).                                                                                               |
 | **Sessions**                      | Conversations persist; `**--session latest`** picks up where you left off.                                                                                                                                                 |
