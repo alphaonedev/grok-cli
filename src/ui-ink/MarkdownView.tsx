@@ -34,7 +34,7 @@ const proseOptions = {
   // Horizontal rule — single clean line
   hr: () => chalk.hex("#44475A")("─".repeat(60)),
 
-  // Tables
+  // Tables — compact single-line, no padding
   tableOptions: {
     chars: {
       top: "─",
@@ -56,7 +56,11 @@ const proseOptions = {
     style: {
       head: ["cyan", "bold"],
       border: ["gray"],
+      "padding-left": 1,
+      "padding-right": 1,
     },
+    colWidths: null,
+    wordWrap: false,
   },
 
   // Code blocks — add language label, dark background
@@ -127,6 +131,10 @@ function postProcess(text: string): string {
 
   // Clean up links: "Text (https://url)" → "Text — url" (compact, no parens)
   result = result.replace(/\(https?:\/\/([^)]+)\)/g, chalk.hex("#6272A4")("— $1"));
+
+  // Clean up tables: remove empty lines between rows (caused by cli-table3 padding)
+  result = result.replace(/│\n\n/g, "│\n");
+  result = result.replace(/┤\n\n/g, "┤\n");
 
   return result;
 }
