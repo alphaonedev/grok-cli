@@ -8,8 +8,8 @@ import {
 } from "./models";
 
 describe("models", () => {
-  it("keeps the default model on a canonical reasoning id", () => {
-    expect(DEFAULT_MODEL).toBe("grok-4-1-fast-reasoning");
+  it("keeps the default model on a canonical non-reasoning id", () => {
+    expect(DEFAULT_MODEL).toBe("grok-4-1-fast-non-reasoning");
   });
 
   it("normalizes current aliases to canonical ids", () => {
