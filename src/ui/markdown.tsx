@@ -1,6 +1,87 @@
+/**
+ * Markdown component — hybrid rendering.
+ *
+ * OpenTUI's <markdown> handles: headers, bold, italic, lists, tables,
+ * links, blockquotes, horizontal rules (via tree-sitter concealment).
+ *
+ * Code blocks are pre-rendered with our ANSI syntax highlighter
+ * (terminal-markdown.ts) because OpenTUI's tree-sitter language
+ * injection only supports JS/TS/Zig. We support 25+ languages.
+ *
+ * The pre-processed content replaces fenced code blocks with
+ * indented code (which OpenTUI renders as monospace without
+ * attempting tree-sitter injection), with ANSI colors already applied.
+ */
+
 import { RGBA, SyntaxStyle } from "@opentui/core";
 import { useMemo } from "react";
 import type { Theme } from "./theme";
+
+// ANSI codes for code block highlighting
+const ESC = "\x1b";
+const RESET = `${ESC}[0m`;
+const GRAY = `${ESC}[90m`;
+const GREEN = `${ESC}[32m`;
+const YELLOW = `${ESC}[33m`;
+const MAGENTA = `${ESC}[35m`;
+const BG_DARK = `${ESC}[48;5;236m`;
+
+function highlightCode(code: string): string {
+  const TOKEN =
+    /\/\/.*$|#!.*$|#.*$|\/\*[\s\S]*?\*\/|(["'`])(?:(?!\1).)*?\1|\b(const|let|var|function|return|if|else|elif|for|while|import|export|from|class|new|async|await|try|catch|throw|typeof|instanceof|interface|type|enum|extends|implements|public|private|protected|static|readonly|abstract|override|def|self|True|False|None|fn|mut|pub|use|mod|struct|impl|trait|match|loop|package|main|func|go|chan|defer|select|case|switch|break|continue|range|map|nil|string|int|float|bool|void|char|double|long|short|unsigned|signed|extern|volatile|register|union|template|namespace|using|virtual|final|super|this|yield|with|as|in|is|not|and|or|lambda|pass|raise|except|finally|global|nonlocal|assert|del|print|puts|require|module|begin|end|rescue|ensure|do|then|elsif|unless|until|when|next|redo|retry|proc|val|var|object|sealed|lazy|override|implicit|where|let|rec|open|include|sig|functor)\b|\b(\d+\.?\d*)\b/gm;
+
+  return code.replace(TOKEN, (match, quote, keyword, number) => {
+    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!")))
+      return `${GRAY}${match}${RESET}${BG_DARK}`;
+    if (quote) return `${GREEN}${match}${RESET}${BG_DARK}`;
+    if (keyword) return `${MAGENTA}${match}${RESET}${BG_DARK}`;
+    if (number) return `${YELLOW}${match}${RESET}${BG_DARK}`;
+    return match;
+  });
+}
+
+/**
+ * Pre-process markdown: extract fenced code blocks and replace with
+ * ANSI-highlighted indented code. OpenTUI renders indented code as
+ * monospace without tree-sitter injection.
+ */
+function preprocessCodeBlocks(md: string): string {
+  const lines = md.split("\n");
+  const output: string[] = [];
+  let inCodeBlock = false;
+  let codeBlockLang = "";
+  let codeLines: string[] = [];
+
+  for (const line of lines) {
+    if (line.trimStart().startsWith("```")) {
+      if (inCodeBlock) {
+        // End code block — render highlighted
+        const header = `${GRAY}┌─ ${codeBlockLang || "code"} ${"─".repeat(Math.max(0, 40 - (codeBlockLang || "code").length))}${RESET}`;
+        const footer = `${GRAY}└${"─".repeat(44)}${RESET}`;
+        output.push(header);
+        for (const cl of codeLines) {
+          output.push(`${BG_DARK} ${highlightCode(cl)} ${RESET}`);
+        }
+        output.push(footer);
+        inCodeBlock = false;
+        codeLines = [];
+        codeBlockLang = "";
+      } else {
+        inCodeBlock = true;
+        codeBlockLang = line.trim().slice(3).trim();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeLines.push(line);
+    } else {
+      output.push(line);
+    }
+  }
+
+  return output.join("\n");
+}
 
 function buildSyntaxStyle(t: Theme): SyntaxStyle {
   return SyntaxStyle.fromStyles({
@@ -20,37 +101,6 @@ function buildSyntaxStyle(t: Theme): SyntaxStyle {
     "markup.quote": { fg: RGBA.fromHex(t.mdItalic), italic: true },
     "markup.separator": { fg: RGBA.fromHex(t.mdHr) },
     code: { fg: RGBA.fromHex(t.mdCodeBlockFg), bg: RGBA.fromHex(t.mdCodeBlockBg) },
-    // Language injection syntax highlighting (JS/TS/Zig)
-    variable: { fg: RGBA.fromHex(t.mdCodeBlockFg) },
-    property: { fg: RGBA.fromHex(t.mdCodeBlockFg) },
-    function: { fg: RGBA.fromHex("#61afef") },
-    "function.method": { fg: RGBA.fromHex("#61afef") },
-    "function.builtin": { fg: RGBA.fromHex("#61afef") },
-    keyword: { fg: RGBA.fromHex("#c678dd") },
-    "keyword.return": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.function": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.import": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.export": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.operator": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.conditional": { fg: RGBA.fromHex("#c678dd") },
-    "keyword.repeat": { fg: RGBA.fromHex("#c678dd") },
-    string: { fg: RGBA.fromHex("#98c379") },
-    "string.special": { fg: RGBA.fromHex("#98c379") },
-    number: { fg: RGBA.fromHex("#d19a66") },
-    "number.float": { fg: RGBA.fromHex("#d19a66") },
-    boolean: { fg: RGBA.fromHex("#d19a66") },
-    comment: { fg: RGBA.fromHex("#5c6370") },
-    "comment.line": { fg: RGBA.fromHex("#5c6370") },
-    "comment.block": { fg: RGBA.fromHex("#5c6370") },
-    operator: { fg: RGBA.fromHex("#56b6c2") },
-    punctuation: { fg: RGBA.fromHex(t.mdCodeBlockFg) },
-    "punctuation.bracket": { fg: RGBA.fromHex(t.mdCodeBlockFg) },
-    "punctuation.delimiter": { fg: RGBA.fromHex(t.mdCodeBlockFg) },
-    type: { fg: RGBA.fromHex("#e5c07b") },
-    "type.builtin": { fg: RGBA.fromHex("#e5c07b") },
-    constant: { fg: RGBA.fromHex("#d19a66") },
-    "constant.builtin": { fg: RGBA.fromHex("#d19a66") },
-    label: { fg: RGBA.fromHex("#5c6370") },
   });
 }
 
@@ -67,10 +117,11 @@ const TABLE_OPTIONS = {
 
 export function Markdown({ content, t }: { content: string; t: Theme }) {
   const syntaxStyle = useMemo(() => buildSyntaxStyle(t), [t]);
+  const processed = useMemo(() => preprocessCodeBlocks(content), [content]);
 
   return (
     <markdown
-      content={content}
+      content={processed}
       syntaxStyle={syntaxStyle}
       conceal={true}
       // @ts-expect-error MarkdownProps omits inherited Renderable.selectable; needed for TUI text selection
