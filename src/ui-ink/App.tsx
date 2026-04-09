@@ -3,7 +3,7 @@
  * Replaces OpenTUI's app.tsx with a simpler, markdown-capable UI.
  */
 
-import { Box, Text, useApp, useInput, useStdout } from "ink";
+import { Box, Static, Text, useApp, useInput, useStdout } from "ink";
 import Spinner from "ink-spinner";
 import TextInput from "ink-text-input";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -177,9 +177,7 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
     [isProcessing, processMessage, inputText, pastedText, inputDisplay.replace],
   );
 
-  // Show last N messages that fit
-  const maxVisible = 10;
-  const visibleMessages = messages.slice(-maxVisible);
+  // Static renders all completed messages as permanent terminal output
 
   return (
     <Box flexDirection="column" width={cols}>
@@ -194,28 +192,30 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
         </Text>
       </Box>
 
-      {/* Messages */}
-      {visibleMessages.map((msg, i) => (
-        <Box key={`msg-${i}`} flexDirection="column" paddingX={1} marginBottom={1}>
-          <Text bold color={msg.role === "user" ? "blue" : "green"}>
-            {msg.role === "user" ? "You" : "Agent"}
-          </Text>
-          {msg.role === "assistant" ? (
-            <Box marginLeft={2}>
-              <MarkdownView content={msg.content} />
-            </Box>
-          ) : (
-            <Box marginLeft={2}>
-              <Text>{msg.content}</Text>
-            </Box>
-          )}
-          {msg.toolCalls?.map((tc, j) => (
-            <ToolCallView key={`tc-${j}`} toolCall={tc.call} toolResult={tc.result} />
-          ))}
-        </Box>
-      ))}
+      {/* Completed messages — rendered once, native terminal text selection works */}
+      <Static items={messages}>
+        {(msg, i) => (
+          <Box key={`msg-${i}`} flexDirection="column" paddingX={1} marginBottom={1}>
+            <Text bold color={msg.role === "user" ? "blue" : "green"}>
+              {msg.role === "user" ? "You" : "Agent"}
+            </Text>
+            {msg.role === "assistant" ? (
+              <Box marginLeft={2}>
+                <MarkdownView content={msg.content} />
+              </Box>
+            ) : (
+              <Box marginLeft={2}>
+                <Text>{msg.content}</Text>
+              </Box>
+            )}
+            {msg.toolCalls?.map((tc, j) => (
+              <ToolCallView key={`tc-${j}`} toolCall={tc.call} toolResult={tc.result} />
+            ))}
+          </Box>
+        )}
+      </Static>
 
-      {/* Streaming content */}
+      {/* Streaming content — dynamic, redraws as tokens arrive */}
       {streamContent && (
         <Box flexDirection="column" paddingX={1} marginBottom={1}>
           <Text bold color="green">
@@ -227,7 +227,7 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
         </Box>
       )}
 
-      {/* Active tools */}
+      {/* Active tools — dynamic */}
       {activeTools.map((tc, i) => (
         <ToolCallView key={`atc-${i}`} toolCall={tc.call} toolResult={tc.result} />
       ))}
