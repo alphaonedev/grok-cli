@@ -63,43 +63,17 @@ async function startInteractive(
 ) {
   const agent = new Agent(apiKey, baseURL, model, maxToolRounds, { session, sandboxMode, sandboxSettings, batchApi });
   await agent.connectMcp();
-  const { createCliRenderer } = await import("@opentui/core");
-  const { createRoot } = await import("@opentui/react");
+  const { render } = await import("ink");
   const { createElement } = await import("react");
-  const { App } = await import("./ui/app");
+  const { App } = await import("./ui-ink/App");
 
-  const renderer = await createCliRenderer({
-    exitOnCtrlC: false,
-    // Lets terminals (Kitty, iTerm2, WezTerm, …) report Command as `super` on KeyEvent — needed for ⌘C in the TUI.
-    useKittyKeyboard: {
-      disambiguate: true,
-      alternateKeys: true,
-    },
-  });
+  const { waitUntilExit } = render(createElement(App, { agent, initialMessage }));
 
-  const onExit = () => {
-    void agent.cleanup().finally(() => {
-      renderer.destroy();
-      process.exit(0);
-    });
-  };
-
-  createRoot(renderer).render(
-    createElement(App, {
-      agent,
-      startupConfig: {
-        apiKey,
-        baseURL,
-        model,
-        maxToolRounds,
-        sandboxMode,
-        sandboxSettings,
-        version: packageJson.version,
-      },
-      initialMessage,
-      onExit,
-    }),
-  );
+  try {
+    await waitUntilExit();
+  } finally {
+    await agent.cleanup();
+  }
 }
 
 async function runHeadless(
