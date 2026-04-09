@@ -30,11 +30,29 @@ const proseOptions = {
   // Horizontal rule
   hr: chalk.hex("#44475A"),
 
-  // Tables
+  // Tables — compact single-line borders
   tableOptions: {
+    chars: {
+      top: "─",
+      "top-mid": "┬",
+      "top-left": "┌",
+      "top-right": "┐",
+      bottom: "─",
+      "bottom-mid": "┴",
+      "bottom-left": "└",
+      "bottom-right": "┘",
+      left: "│",
+      "left-mid": "├",
+      mid: "─",
+      "mid-mid": "┼",
+      right: "│",
+      "right-mid": "┤",
+      middle: "│",
+    },
     style: {
-      head: ["cyan"],
+      head: ["cyan", "bold"],
       border: ["gray"],
+      compact: true,
     },
   },
 
