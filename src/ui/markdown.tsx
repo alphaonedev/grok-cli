@@ -161,24 +161,32 @@ const TABLE_OPTIONS = {
 function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
   const borderFg = RGBA.fromHex(C.border);
   const bgColor = RGBA.fromHex(C.bg);
-  const labelFg = RGBA.fromHex(C.label);
   const label = lang || "code";
-  const rule = "─".repeat(Math.max(0, 44 - label.length));
+  // Fixed width for consistent box
+  const W = 80;
+  const topRule = "─".repeat(Math.max(0, W - label.length - 4));
+  const botRule = "─".repeat(W);
 
   return (
     <box flexDirection="column" flexShrink={0} marginTop={1} marginBottom={1}>
-      <text fg={borderFg}>{`┌─ ${label} ${rule}`}</text>
-      {lines.map((line, i) => (
-        <text key={i} bg={bgColor} fg={RGBA.fromHex(C.default)}>
-          <span> </span>
-          {tokenizeLine(line).map((tok, j) => (
-            <span key={j} fg={RGBA.fromHex(tok.color)}>
-              {tok.text}
-            </span>
-          ))}
-        </text>
-      ))}
-      <text fg={borderFg}>{`└${"─".repeat(46)}`}</text>
+      <text fg={borderFg}>{`┌─ ${label} ${topRule}`}</text>
+      {lines.map((line, i) => {
+        const tokens = tokenizeLine(line);
+        const textLen = tokens.reduce((sum, tok) => sum + tok.text.length, 0);
+        const pad = Math.max(0, W - textLen - 2);
+        return (
+          <text key={i} bg={bgColor} fg={RGBA.fromHex(C.default)}>
+            <span> </span>
+            {tokens.map((tok, j) => (
+              <span key={j} fg={RGBA.fromHex(tok.color)}>
+                {tok.text}
+              </span>
+            ))}
+            <span>{" ".repeat(pad + 1)}</span>
+          </text>
+        );
+      })}
+      <text fg={borderFg}>{`└${botRule}`}</text>
     </box>
   );
 }
