@@ -1,5 +1,6 @@
 import { RGBA, SyntaxStyle } from "@opentui/core";
 import { useMemo } from "react";
+import { CodeBlock } from "./code-block";
 import type { Theme } from "./theme";
 
 function buildSyntaxStyle(t: Theme): SyntaxStyle {
@@ -34,18 +35,86 @@ const TABLE_OPTIONS = {
   borderColor: "#333333",
 };
 
+interface Chunk {
+  kind: "md" | "code";
+  text: string;
+  lang: string;
+  lines: string[];
+}
+
+function splitChunks(content: string): Chunk[] {
+  const chunks: Chunk[] = [];
+  const lines = content.split("\n");
+  let md: string[] = [];
+  let code: string[] = [];
+  let inCode = false;
+  let lang = "";
+
+  for (const line of lines) {
+    if (line.trimStart().startsWith("```")) {
+      if (inCode) {
+        chunks.push({ kind: "code", text: "", lang, lines: code });
+        code = [];
+        lang = "";
+        inCode = false;
+      } else {
+        if (md.length > 0) {
+          chunks.push({ kind: "md", text: md.join("\n"), lang: "", lines: [] });
+          md = [];
+        }
+        inCode = true;
+        lang = line.trim().slice(3).trim();
+      }
+    } else if (inCode) {
+      code.push(line);
+    } else {
+      md.push(line);
+    }
+  }
+  if (md.length > 0) {
+    chunks.push({ kind: "md", text: md.join("\n"), lang: "", lines: [] });
+  }
+  return chunks;
+}
+
 export function Markdown({ content, t }: { content: string; t: Theme }) {
   const syntaxStyle = useMemo(() => buildSyntaxStyle(t), [t]);
+  const chunks = useMemo(() => splitChunks(content), [content]);
 
+  // No code blocks — use <markdown> directly (fastest path)
+  if (chunks.length === 1 && chunks[0].kind === "md") {
+    return (
+      <markdown
+        content={content}
+        syntaxStyle={syntaxStyle}
+        conceal={true}
+        // @ts-expect-error MarkdownProps omits inherited Renderable.selectable
+        selectable={true}
+        tableOptions={TABLE_OPTIONS}
+        flexShrink={0}
+      />
+    );
+  }
+
+  // Mixed content — split into markdown + code block chunks
   return (
-    <markdown
-      content={content}
-      syntaxStyle={syntaxStyle}
-      conceal={true}
-      // @ts-expect-error MarkdownProps omits inherited Renderable.selectable; needed for TUI text selection
-      selectable={true}
-      tableOptions={TABLE_OPTIONS}
-      flexShrink={0}
-    />
+    <box flexDirection="column" flexShrink={0}>
+      {chunks.map((chunk, i) =>
+        chunk.kind === "md" ? (
+          <markdown
+            key={`md-${i}`}
+            content={chunk.text}
+            syntaxStyle={syntaxStyle}
+            conceal={true}
+            // @ts-expect-error MarkdownProps omits inherited Renderable.selectable
+            selectable={true}
+            tableOptions={TABLE_OPTIONS}
+            flexShrink={0}
+          />
+        ) : (
+          <CodeBlock key={`cb-${i}`} lang={chunk.lang} lines={chunk.lines} />
+        ),
+      )}
+    </box>
   );
 }
