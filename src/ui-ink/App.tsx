@@ -268,8 +268,10 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
 
       {/* Status bar */}
       <Box paddingX={1}>
-        <Text dimColor>
+        <Text color="cyan" bold>
           {model}
+        </Text>
+        <Text dimColor>
           {" · "}
           {mode}
           {" · "}
