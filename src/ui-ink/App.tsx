@@ -29,7 +29,10 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
   const [pastedText, setPastedText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
   const processedInitial = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef(0);
 
   const model = agent.getModel();
   const mode = agent.getMode();
@@ -43,6 +46,11 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
       setStreamContent("");
       setActiveTools([]);
       setError("");
+      setElapsedMs(0);
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsedMs(Date.now() - startTimeRef.current);
+      }, 100);
       setMessages((m) => [...m, { role: "user", content: text }]);
 
       let accumulated = "";
@@ -94,6 +102,8 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
         setIsProcessing(false);
       }
     },
@@ -210,13 +220,17 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
         <ToolCallView key={`atc-${i}`} toolCall={tc.call} toolResult={tc.result} />
       ))}
 
-      {/* Processing spinner */}
-      {isProcessing && !streamContent && activeTools.length === 0 && (
+      {/* Processing indicator with elapsed time */}
+      {isProcessing && (
         <Box paddingX={1}>
           <Text color="cyan">
             <Spinner type="dots" />
           </Text>
-          <Text dimColor> Thinking...</Text>
+          <Text dimColor>
+            {" "}
+            {streamContent ? "Generating" : activeTools.length > 0 ? "Running tools" : "Thinking"}
+            {elapsedMs > 0 ? ` (${(elapsedMs / 1000).toFixed(1)}s)` : ""}
+          </Text>
         </Box>
       )}
 
@@ -228,19 +242,29 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
       )}
 
       {/* Input */}
-      <Box borderStyle="round" borderColor={isProcessing ? "gray" : "cyan"} paddingX={1} marginTop={1}>
-        <Text color="cyan">{mode === "agent" ? "Agent" : mode === "plan" ? "Plan" : "Ask"} </Text>
+      <Box paddingX={1} marginTop={1}>
+        <Text color="cyan" bold>
+          {"❯ "}
+        </Text>
         <TextInput
           value={inputDisplay}
           onChange={handleInputChange}
           onSubmit={handleSubmit}
-          placeholder={isProcessing ? "Processing..." : "Message Grok..."}
+          placeholder={isProcessing ? "" : "Message Grok..."}
         />
       </Box>
 
-      {/* Footer */}
+      {/* Status bar */}
       <Box paddingX={1}>
-        <Text dimColor>{model} · ctrl+c exit</Text>
+        <Text dimColor>
+          {model}
+          {" · "}
+          {mode}
+          {" · "}
+          {messages.length} messages
+          {" · "}
+          ctrl+c exit
+        </Text>
       </Box>
     </Box>
   );
