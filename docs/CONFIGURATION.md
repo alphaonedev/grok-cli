@@ -20,7 +20,7 @@ The complete `~/.grok/user-settings.json` with all fields:
 {
   "apiKey": "YOUR xAI Grok API KEY GOES HERE",
   "baseURL": "https://api.x.ai/v1",
-  "defaultModel": "grok-4-1-fast-reasoning",
+  "defaultModel": "grok-4-1-fast-non-reasoning",
   "models": [
     "grok-4.20-reasoning",
     "grok-4.20-non-reasoning",
@@ -130,13 +130,14 @@ The xAI API endpoint. Only change this if using a proxy or custom endpoint. Over
 ### Default Model
 
 ```json
-{ "defaultModel": "grok-4-1-fast-reasoning" }
+{ "defaultModel": "grok-4-1-fast-non-reasoning" }
 ```
 
-Recommended default for most development work:
+Recommended default for interactive use:
 - 2M token context window (largest available across all frontier models)
-- Reasoning enabled (chain-of-thought for complex problem solving)
+- Non-reasoning for instant responses (no thinking delay)
 - $0.20/M input, $0.50/M output (10x cheaper than flagship grok-4.20)
+- Use `grok-4-1-fast-reasoning` or `grok-4.20-reasoning` for deep analysis via sub-agents
 
 Override per-session with `grok --model grok-4.20-reasoning` or per-project in `.grok/settings.json`.
 

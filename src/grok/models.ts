@@ -125,7 +125,9 @@ for (const model of MODELS) {
 }
 
 export const DEFAULT_MODEL =
-  MODELS.find((model) => model.id === "grok-4-1-fast-reasoning")?.id ?? MODELS[0]?.id ?? "grok-4-1-fast-reasoning";
+  MODELS.find((model) => model.id === "grok-4-1-fast-non-reasoning")?.id ??
+  MODELS[0]?.id ??
+  "grok-4-1-fast-non-reasoning";
 
 export function normalizeModelId(modelId: string): string {
   const trimmed = modelId.trim();

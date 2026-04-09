@@ -105,7 +105,7 @@ Or create `~/.grok/user-settings.json` with the full configuration:
 {
   "apiKey": "YOUR xAI Grok API KEY GOES HERE",
   "baseURL": "https://api.x.ai/v1",
-  "defaultModel": "grok-4-1-fast-reasoning",
+  "defaultModel": "grok-4-1-fast-non-reasoning",
   "models": [
     "grok-4.20-reasoning",
     "grok-4.20-non-reasoning",
