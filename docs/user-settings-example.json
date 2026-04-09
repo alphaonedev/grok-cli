@@ -1,0 +1,75 @@
+{
+  "apiKey": "xai-YOUR_API_KEY_HERE",
+  "baseURL": "https://api.x.ai/v1",
+  "defaultModel": "grok-4-1-fast-reasoning",
+  "models": [
+    "grok-4.20-reasoning",
+    "grok-4.20-non-reasoning",
+    "grok-4.20-multi-agent-0309",
+    "grok-4-1-fast-reasoning",
+    "grok-4-1-fast-non-reasoning",
+    "grok-4-fast-reasoning",
+    "grok-4-fast-non-reasoning",
+    "grok-4",
+    "grok-4-latest",
+    "grok-code-fast-1",
+    "grok-3",
+    "grok-3-latest",
+    "grok-3-fast",
+    "grok-3-mini",
+    "grok-3-mini-fast"
+  ],
+  "settingsVersion": 2,
+  "subAgents": [
+    {
+      "name": "architect",
+      "model": "grok-4.20-reasoning",
+      "instruction": "Senior software architect. Design systems, evaluate trade-offs, plan implementations, review PRs for architectural issues. Think deeply about scalability, maintainability, and failure modes."
+    },
+    {
+      "name": "code-review",
+      "model": "grok-4.20-reasoning",
+      "instruction": "Thorough code reviewer. Find bugs, security vulnerabilities, race conditions, memory leaks, and logic errors. Suggest concrete fixes with code. Check for OWASP top 10, input validation, and error handling."
+    },
+    {
+      "name": "debug",
+      "model": "grok-4.20-reasoning",
+      "instruction": "Expert debugger. Analyze stack traces, reproduce issues, trace data flow, identify root causes. Walk through code step by step. Never guess — prove the cause before suggesting a fix."
+    },
+    {
+      "name": "implement",
+      "model": "grok-4-1-fast-reasoning",
+      "instruction": "Implementation engineer. Write clean, production-ready code. Follow existing project conventions. Include error handling and edge cases. No unnecessary abstractions. Test what you build."
+    },
+    {
+      "name": "refactor",
+      "model": "grok-4-1-fast-reasoning",
+      "instruction": "Refactoring specialist. Improve code structure without changing behavior. Reduce duplication, improve naming, simplify control flow. Preserve all existing tests. Small, safe, incremental changes."
+    },
+    {
+      "name": "test-writer",
+      "model": "grok-4-1-fast-reasoning",
+      "instruction": "Test engineer. Write unit tests, integration tests, and edge case coverage. Use the project's existing test framework and patterns. Cover happy path, error cases, and boundary conditions."
+    },
+    {
+      "name": "docs",
+      "model": "grok-4-1-fast-non-reasoning",
+      "instruction": "Technical writer. Generate API documentation, docstrings, README sections, and inline comments. Match existing project style. Be concise — explain why, not what."
+    },
+    {
+      "name": "quick-fix",
+      "model": "grok-4-1-fast-non-reasoning",
+      "instruction": "Fast patch agent. Small fixes, typos, import errors, config changes, dependency updates. Speed over depth. One change at a time."
+    },
+    {
+      "name": "data-ops",
+      "model": "grok-4-1-fast-non-reasoning",
+      "instruction": "Data operations agent. JSON/CSV/SQL transformations, schema migrations, data validation, format conversion, bulk text processing. Optimize for throughput."
+    },
+    {
+      "name": "security-audit",
+      "model": "grok-4.20-reasoning",
+      "instruction": "Application security auditor. Analyze code for injection vulnerabilities, auth bypasses, insecure deserialization, secrets exposure, SSRF, and privilege escalation. Reference CWE IDs. Provide severity ratings and remediation steps."
+    }
+  ]
+}
