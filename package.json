@@ -22,7 +22,7 @@
     "dev": "bun run src/index.ts",
     "build": "tsc",
     "build:binary": "bun build --compile --outfile dist/grok-standalone ./src/index.ts && (command -v codesign >/dev/null && codesign --force --sign - dist/grok-standalone || true)",
-    "install:local": "bun run build:binary && cp dist/grok-standalone ~/.grok/bin/grok && chmod 755 ~/.grok/bin/grok && echo 'Installed to ~/.grok/bin/grok'",
+    "install:local": "mkdir -p ~/.grok/bin && printf '#!/bin/bash\\nGROK_CLI_DIR=\"${GROK_CLI_DIR:-'\"$(pwd)\"'}\"\\nexec bun run \"$GROK_CLI_DIR/src/index.ts\" \"$@\"\\n' > ~/.grok/bin/grok && chmod 755 ~/.grok/bin/grok && echo 'Installed to ~/.grok/bin/grok (source mode — full markdown rendering)'",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "bunx vitest run",
