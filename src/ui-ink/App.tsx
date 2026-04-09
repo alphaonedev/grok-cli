@@ -115,23 +115,23 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
     }
   });
 
-  const PASTE_THRESHOLD = 100;
+  const PASTE_THRESHOLD = 50;
 
   const handleInputChange = useCallback(
     (value: string) => {
-      // Detect paste: if input grows by more than PASTE_THRESHOLD chars in one event
+      // Detect paste: large delta in one event
       const delta = value.length - inputText.length;
       if (delta > PASTE_THRESHOLD) {
-        const pasted = value.slice(inputText.length);
-        const chars = pasted.length;
-        const lines = pasted.split("\n").length;
+        // Store full pasted text, show compact label
+        const chars = value.length;
+        const lines = value.split("\n").length;
         const label =
           lines > 1
-            ? `[Pasted ${chars.toLocaleString()} chars, ${lines} lines]`
-            : `[Pasted ${chars.toLocaleString()} chars]`;
-        setPastedText(pasted);
-        setInputDisplay(inputText + label);
-        setInputText(value);
+            ? `[Pasted ${chars.toLocaleString()} chars, ${lines} lines] — press Enter to send`
+            : `[Pasted ${chars.toLocaleString()} chars] — press Enter to send`;
+        setPastedText(value);
+        setInputDisplay(label);
+        // Don't update inputText — pastedText holds the full content
         return;
       }
       setPastedText("");
@@ -142,10 +142,11 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
   );
 
   const handleSubmit = useCallback(
-    (text: string) => {
+    (_text: string) => {
       if (isProcessing) return;
-      // Send actual text (including full paste content), not display text
-      const actualText = pastedText ? inputText : text;
+      // Always prefer pastedText (full content) over display text
+      const actualText = pastedText || inputText;
+      if (!actualText.trim()) return;
       setInputText("");
       setInputDisplay("");
       setPastedText("");
