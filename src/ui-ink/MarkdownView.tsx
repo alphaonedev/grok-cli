@@ -4,33 +4,37 @@ import { Marked } from "marked";
 import { markedTerminal } from "marked-terminal";
 import React, { useMemo } from "react";
 
-// ── Prose styling (headers, bold, italic, links, lists, etc.) ────────────────
+// ── Prose styling ────────────────────────────────────────────────────────────
 
 const proseOptions = {
-  // Headers — bold + colored, no # prefix
+  // Headers
   showSectionPrefix: false,
-  heading: chalk.hex("#BD93F9").bold, // vivid purple bold
+  firstHeading: chalk.hex("#FF79C6").bold.underline,
+  heading: chalk.hex("#BD93F9").bold,
 
   // Text styles
-  strong: chalk.hex("#F8F8F2").bold, // bright white bold
-  em: chalk.hex("#F1FA8C").italic, // vivid yellow italic
-  del: chalk.hex("#6272A4").strikethrough, // gray strikethrough
-  codespan: chalk.hex("#50FA7B").bgHex("#282A36"), // green on dark bg (inline code)
+  strong: chalk.hex("#F8F8F2").bold,
+  em: chalk.hex("#F1FA8C").italic,
+  del: chalk.hex("#6272A4").strikethrough,
+  codespan: chalk.hex("#50FA7B").bgHex("#282A36"),
 
-  // Links
-  link: chalk.hex("#8BE9FD").underline, // cyan underline
-  href: chalk.hex("#6272A4"), // muted gray for URL
+  // Links — show styled text, dim URL
+  link: chalk.hex("#8BE9FD").underline,
+  href: chalk.hex("#6272A4").dim,
 
-  // Lists — use chalk.reset to not interfere with default numbering/bullets
+  // Lists
   listitem: chalk.reset,
 
-  // Blockquotes
-  blockquote: chalk.hex("#6272A4").italic,
+  // Blockquote — add left bar indicator
+  blockquote: (text: string) => {
+    const lines = text.split("\n");
+    return lines.map((line) => chalk.hex("#44475A")("  │ ") + chalk.hex("#6272A4").italic(line)).join("\n");
+  },
 
-  // Horizontal rule
-  hr: chalk.hex("#44475A"),
+  // Horizontal rule — single clean line
+  hr: () => chalk.hex("#44475A")("─".repeat(60)),
 
-  // Tables — compact single-line borders
+  // Tables
   tableOptions: {
     chars: {
       top: "─",
@@ -52,26 +56,24 @@ const proseOptions = {
     style: {
       head: ["cyan", "bold"],
       border: ["gray"],
-      compact: true,
     },
   },
 
-  // Code blocks
-  code: chalk.hex("#F8F8F2").bgHex("#282A36"),
+  // Code blocks — add language label, dark background
+  code: (code: string) => chalk.bgHex("#282A36").hex("#F8F8F2")(code),
 
-  // Paragraph spacing
+  // General
   tab: 2,
   width: 90,
   reflowText: false,
-
-  // Images
+  paragraph: chalk.reset,
   image: chalk.hex("#6272A4").italic,
 
-  // First heading gets extra emphasis
-  firstHeading: chalk.hex("#FF79C6").bold.underline,
+  // Unescape HTML entities
+  unescape: true,
 };
 
-// ── Syntax highlighting theme (inside code blocks) ───────────────────────────
+// ── Syntax highlighting theme ────────────────────────────────────────────────
 
 const syntaxTheme = {
   keyword: chalk.hex("#FF5555").bold,
@@ -109,15 +111,31 @@ const syntaxTheme = {
   deletion: chalk.hex("#FF5555").bold,
 };
 
-// ── Create renderer ──────────────────────────────────────────────────────────
+// ── Build renderer ───────────────────────────────────────────────────────────
 
-const md = new Marked(markedTerminal(proseOptions, { theme: syntaxTheme }));
+const extension = markedTerminal(proseOptions, { theme: syntaxTheme });
+
+// Post-process: fix bullets (* → •) and add code block labels
+function postProcess(text: string): string {
+  // Replace asterisk bullets with dot bullets
+  let result = text.replace(/^(\s+)\* /gm, "$1• ");
+  result = result.replace(/^(\s+)\* /gm, "$1• "); // nested
+
+  // Remove double horizontal rules (marked-terminal sometimes emits both styled and raw)
+  result = result.replace(/─{10,}\n\s*-{3,}\n/g, "─".repeat(60) + "\n");
+  result = result.replace(/\n-{3,}\n/g, "\n");
+
+  return result;
+}
+
+const md = new Marked(extension);
 
 export function MarkdownView({ content }: { content: string }) {
   const rendered = useMemo(() => {
     if (!content) return "";
     try {
-      return md.parse(content) as string;
+      const raw = md.parse(content) as string;
+      return postProcess(raw);
     } catch {
       return content;
     }
