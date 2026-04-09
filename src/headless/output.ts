@@ -1,5 +1,6 @@
 import type { ProcessMessageObserver, ProcessMessageStepFinish, ProcessMessageStepStart } from "../agent/agent";
 import type { StreamChunk, ToolCall, ToolResult } from "../types";
+import { containsMarkdown, renderMarkdown } from "../utils/terminal-markdown";
 
 export type HeadlessOutputFormat = "text" | "json";
 
@@ -75,10 +76,31 @@ export function renderHeadlessPrelude(format: HeadlessOutputFormat, sessionId?: 
 /**
  * Headless text output only. JSON streaming uses {@link createHeadlessJsonlEmitter} + `Agent.processMessage` observer.
  */
+// Buffer content chunks for markdown rendering on step completion
+let _contentBuffer = "";
+
 export function renderHeadlessChunk(chunk: StreamChunk): HeadlessWrites {
   switch (chunk.type) {
     case "content":
-      return chunk.content ? { stdout: chunk.content } : {};
+      if (chunk.content) {
+        _contentBuffer += chunk.content;
+        // Stream raw for immediate feedback — markdown rendered on "done"
+        return { stdout: chunk.content };
+      }
+      return {};
+
+    case "done": {
+      // Render buffered content as markdown if it contains formatting
+      const buffered = _contentBuffer;
+      _contentBuffer = "";
+      if (buffered && containsMarkdown(buffered)) {
+        // Move cursor up to overwrite raw streamed text, render formatted
+        const lineCount = buffered.split("\n").length;
+        const moveUp = `\x1b[${lineCount}A\x1b[J`;
+        return { stdout: `${moveUp}${renderMarkdown(buffered)}\n\n` };
+      }
+      return { stdout: "\n" };
+    }
 
     case "tool_calls":
       return chunk.toolCalls?.length
@@ -106,9 +128,6 @@ export function renderHeadlessChunk(chunk: StreamChunk): HeadlessWrites {
 
     case "error":
       return chunk.content ? { stderr: `\x1b[31m${chunk.content}\x1b[0m\n` } : {};
-
-    case "done":
-      return { stdout: "\n" };
 
     case "reasoning":
       return {};

@@ -1,6 +1,7 @@
 import type { ModelMessage } from "ai";
 import { getCompactionSummaryText } from "../agent/compaction";
 import type { ChatEntry, ToolCall, ToolResult } from "../types/index";
+import { decrypt, encrypt } from "../utils/crypto";
 import { getDatabase, withTransaction } from "./db";
 import { extractToolResultFromOutput, getOutputKind, isOutputSuccess } from "./tool-results";
 import { buildEffectiveTranscript, type LoadedTranscriptState, type PersistedCompaction } from "./transcript-view";
@@ -76,7 +77,7 @@ export function loadLatestCompaction(sessionId: string): PersistedCompaction | n
 
 function buildEffectiveMessageRecords(sessionId: string): EffectiveMessageRecord[] {
   const rows = loadMessageRows(sessionId);
-  const messages = rows.map((row) => JSON.parse(row.message_json) as ModelMessage);
+  const messages = rows.map((row) => JSON.parse(decrypt(row.message_json)) as ModelMessage);
   const seqs = rows.map((row) => row.seq);
   const timestamps = rows.map((row) => new Date(row.created_at));
   const transcript = buildEffectiveTranscript(messages, seqs, timestamps, loadLatestCompaction(sessionId));
@@ -89,13 +90,13 @@ function buildEffectiveMessageRecords(sessionId: string): EffectiveMessageRecord
 }
 
 export function loadRawTranscript(sessionId: string): ModelMessage[] {
-  return loadMessageRows(sessionId).map((row) => JSON.parse(row.message_json) as ModelMessage);
+  return loadMessageRows(sessionId).map((row) => JSON.parse(decrypt(row.message_json)) as ModelMessage);
 }
 
 export function loadTranscriptState(sessionId: string): LoadedTranscriptState {
   const rows = loadMessageRows(sessionId);
   return buildEffectiveTranscript(
-    rows.map((row) => JSON.parse(row.message_json) as ModelMessage),
+    rows.map((row) => JSON.parse(decrypt(row.message_json)) as ModelMessage),
     rows.map((row) => row.seq),
     rows.map((row) => new Date(row.created_at)),
     loadLatestCompaction(sessionId),
@@ -149,7 +150,7 @@ export function appendMessages(sessionId: string, messages: ModelMessage[]): num
       const seq = nextSeq + index;
       const createdAt = new Date().toISOString();
       insertedSeqs.push(seq);
-      insertMessage.run(sessionId, seq, message.role, JSON.stringify(message), createdAt);
+      insertMessage.run(sessionId, seq, message.role, encrypt(JSON.stringify(message)), createdAt);
 
       if (message.role === "assistant" && Array.isArray(message.content)) {
         for (const part of message.content) {
@@ -159,14 +160,14 @@ export function appendMessages(sessionId: string, messages: ModelMessage[]): num
             seq,
             part.toolCallId,
             part.toolName,
-            JSON.stringify(part.input ?? {}),
+            encrypt(JSON.stringify(part.input ?? {})),
             "completed",
             createdAt,
             createdAt,
           );
           updateToolCall.run(
             part.toolName,
-            JSON.stringify(part.input ?? {}),
+            encrypt(JSON.stringify(part.input ?? {})),
             "completed",
             createdAt,
             sessionId,
@@ -189,7 +190,7 @@ export function appendMessages(sessionId: string, messages: ModelMessage[]): num
           insertToolResult.run(
             toolCall.id,
             getOutputKind(part.output),
-            JSON.stringify(extracted ?? part.output),
+            encrypt(JSON.stringify(extracted ?? part.output)),
             extracted ? Number(extracted.success) : Number(isOutputSuccess(part.output)),
             createdAt,
           );
