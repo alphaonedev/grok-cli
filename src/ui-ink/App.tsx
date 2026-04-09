@@ -25,6 +25,8 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
   const [streamContent, setStreamContent] = useState("");
   const [activeTools, setActiveTools] = useState<Array<{ call: ToolCall; result?: ToolResult }>>([]);
   const [inputText, setInputText] = useState("");
+  const [inputDisplay, setInputDisplay] = useState("");
+  const [pastedText, setPastedText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const processedInitial = useRef(false);
@@ -113,13 +115,43 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
     }
   });
 
+  const PASTE_THRESHOLD = 100;
+
+  const handleInputChange = useCallback(
+    (value: string) => {
+      // Detect paste: if input grows by more than PASTE_THRESHOLD chars in one event
+      const delta = value.length - inputText.length;
+      if (delta > PASTE_THRESHOLD) {
+        const pasted = value.slice(inputText.length);
+        const chars = pasted.length;
+        const lines = pasted.split("\n").length;
+        const label =
+          lines > 1
+            ? `[Pasted ${chars.toLocaleString()} chars, ${lines} lines]`
+            : `[Pasted ${chars.toLocaleString()} chars]`;
+        setPastedText(pasted);
+        setInputDisplay(inputText + label);
+        setInputText(value);
+        return;
+      }
+      setPastedText("");
+      setInputDisplay(value);
+      setInputText(value);
+    },
+    [inputText],
+  );
+
   const handleSubmit = useCallback(
     (text: string) => {
       if (isProcessing) return;
+      // Send actual text (including full paste content), not display text
+      const actualText = pastedText ? inputText : text;
       setInputText("");
-      processMessage(text);
+      setInputDisplay("");
+      setPastedText("");
+      processMessage(actualText);
     },
-    [isProcessing, processMessage],
+    [isProcessing, processMessage, inputText, pastedText],
   );
 
   // Show last N messages that fit
@@ -198,8 +230,8 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
       <Box borderStyle="round" borderColor={isProcessing ? "gray" : "cyan"} paddingX={1} marginTop={1}>
         <Text color="cyan">{mode === "agent" ? "Agent" : mode === "plan" ? "Plan" : "Ask"} </Text>
         <TextInput
-          value={inputText}
-          onChange={setInputText}
+          value={inputDisplay}
+          onChange={handleInputChange}
           onSubmit={handleSubmit}
           placeholder={isProcessing ? "Processing..." : "Message Grok..."}
         />
