@@ -68,17 +68,23 @@ export function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
 
   return (
     <box flexDirection="column" flexShrink={0}>
-      <text fg={borderFg}>{`  ┌─ ${label} ${"─".repeat(Math.max(1, 60 - label.length))}`}</text>
-      {lines.map((line, i) => (
-        <text key={`cl-${i}`} bg={bgColor} fg={defaultFg}>
-          {tokenize(line).map((tok, j) => (
-            <span key={`t-${j}`} fg={RGBA.fromHex(tok.color)}>
-              {j === 0 ? `  │ ${tok.text}` : tok.text}
-            </span>
-          ))}
-        </text>
-      ))}
-      <text fg={borderFg}>{`  └${"─".repeat(64)}`}</text>
+      <text fg={borderFg}>{`  ┌─ ${label} ${"─".repeat(Math.max(1, 58 - label.length))}┐`}</text>
+      {lines.map((line, i) => {
+        const tokens = tokenize(line);
+        const textLen = tokens.reduce((sum, tok) => sum + tok.text.length, 0);
+        const pad = Math.max(1, 62 - textLen);
+        return (
+          <text key={`cl-${i}`} bg={bgColor} fg={defaultFg}>
+            {tokens.map((tok, j) => (
+              <span key={`t-${j}`} fg={RGBA.fromHex(tok.color)}>
+                {j === 0 ? `  │ ${tok.text}` : tok.text}
+              </span>
+            ))}
+            <span>{" ".repeat(pad)}│</span>
+          </text>
+        );
+      })}
+      <text fg={borderFg}>{`  └${"─".repeat(63)}┘`}</text>
     </box>
   );
 }
