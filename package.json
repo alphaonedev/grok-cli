@@ -32,7 +32,8 @@
     "format:fix": "biome format --write src/",
     "lint:fix": "biome check --fix src/",
     "pre-commit": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "cp patches/markdown-highlights.scm node_modules/@opentui/core/assets/markdown/highlights.scm 2>/dev/null || true"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs,json}": "biome check --write --no-errors-on-unmatched"

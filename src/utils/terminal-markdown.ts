@@ -54,21 +54,18 @@ function hyperlink(url: string, text?: string): string {
  * Basic syntax keyword highlighting for code blocks.
  */
 function highlightCode(code: string, _lang?: string): string {
-  // Keywords
-  const keywords =
-    /\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|throw|typeof|instanceof|interface|type|enum|extends|implements|public|private|protected|static|readonly|abstract|override|def|self|True|False|None|fn|mut|pub|use|mod|struct|impl|trait|match|loop)\b/g;
-  const strings = /(["'`])(?:(?!\1).)*?\1/g;
-  const comments = /(\/\/.*$|#.*$|\/\*[\s\S]*?\*\/)/gm;
-  const numbers = /\b(\d+\.?\d*)\b/g;
+  // Single-pass tokenizer to avoid ANSI codes being matched by subsequent regexes
+  const TOKEN =
+    /\/\/.*$|#!.*$|#.*$|\/\*[\s\S]*?\*\/|(["'`])(?:(?!\1).)*?\1|\b(const|let|var|function|return|if|else|for|while|import|export|from|class|new|async|await|try|catch|throw|typeof|instanceof|interface|type|enum|extends|implements|public|private|protected|static|readonly|abstract|override|def|self|True|False|None|fn|mut|pub|use|mod|struct|impl|trait|match|loop)\b|\b(\d+\.?\d*)\b/gm;
 
-  let result = code;
-  // Order matters — comments first to prevent keyword highlighting inside them
-  result = result.replace(comments, `${GRAY}$1${RESET}${BG_DARK}`);
-  result = result.replace(strings, `${GREEN}$&${RESET}${BG_DARK}`);
-  result = result.replace(keywords, `${MAGENTA}$1${RESET}${BG_DARK}`);
-  result = result.replace(numbers, `${YELLOW}$1${RESET}${BG_DARK}`);
-
-  return result;
+  return code.replace(TOKEN, (match, quote, keyword, number) => {
+    if (match.startsWith("//") || match.startsWith("/*") || (match.startsWith("#") && !match.startsWith("#!")))
+      return `${GRAY}${match}${RESET}${BG_DARK}`;
+    if (quote) return `${GREEN}${match}${RESET}${BG_DARK}`;
+    if (keyword) return `${MAGENTA}${match}${RESET}${BG_DARK}`;
+    if (number) return `${YELLOW}${match}${RESET}${BG_DARK}`;
+    return match;
+  });
 }
 
 /**
