@@ -4,41 +4,41 @@ import { Marked } from "marked";
 import { markedTerminal } from "marked-terminal";
 import React, { useMemo } from "react";
 
-// GitHub-inspired bright syntax theme
-const GITHUB_THEME = {
-  keyword: chalk.hex("#ff7b72"), // bright red-orange (like GitHub)
-  built_in: chalk.hex("#79c0ff"), // bright blue
-  type: chalk.hex("#ff7b72"), // bright red-orange
-  literal: chalk.hex("#79c0ff"), // bright blue
-  number: chalk.hex("#79c0ff"), // bright blue
-  regexp: chalk.hex("#7ee787"), // bright green
-  string: chalk.hex("#a5d6ff"), // light blue
-  subst: chalk.hex("#c9d1d9"), // light gray
-  symbol: chalk.hex("#ffa657"), // orange
-  class: chalk.hex("#ffa657"), // orange
-  function: chalk.hex("#d2a8ff"), // purple
-  title: chalk.hex("#d2a8ff"), // purple
-  params: chalk.hex("#c9d1d9"), // light gray
-  comment: chalk.hex("#8b949e"), // medium gray
-  doctag: chalk.hex("#8b949e"), // medium gray
-  meta: chalk.hex("#79c0ff"), // bright blue
-  "meta-keyword": chalk.hex("#ff7b72"),
-  "meta-string": chalk.hex("#a5d6ff"),
-  section: chalk.hex("#d2a8ff").bold, // purple bold
-  tag: chalk.hex("#7ee787"), // bright green
-  name: chalk.hex("#7ee787"), // bright green
-  attr: chalk.hex("#79c0ff"), // bright blue
-  attribute: chalk.hex("#79c0ff"), // bright blue
-  variable: chalk.hex("#ffa657"), // orange
-  bullet: chalk.hex("#ffa657"), // orange
-  code: chalk.hex("#a5d6ff"), // light blue
+// Vivid neon syntax theme — maximum contrast on dark backgrounds
+const VIVID_THEME = {
+  keyword: chalk.hex("#FF5555").bold, // vivid red
+  built_in: chalk.hex("#55FFFF"), // vivid cyan
+  type: chalk.hex("#FF79C6"), // hot pink
+  literal: chalk.hex("#55FFFF").bold, // vivid cyan bold
+  number: chalk.hex("#FFB86C"), // vivid orange
+  regexp: chalk.hex("#50FA7B"), // vivid green
+  string: chalk.hex("#F1FA8C"), // vivid yellow
+  subst: chalk.hex("#F8F8F2"), // white
+  symbol: chalk.hex("#FFB86C"), // vivid orange
+  class: chalk.hex("#FF79C6").bold, // hot pink bold
+  function: chalk.hex("#50FA7B").bold, // vivid green bold
+  title: chalk.hex("#50FA7B").bold, // vivid green bold
+  params: chalk.hex("#F8F8F2"), // white
+  comment: chalk.hex("#6272A4").italic, // muted blue italic
+  doctag: chalk.hex("#6272A4").italic, // muted blue italic
+  meta: chalk.hex("#55FFFF"), // vivid cyan
+  "meta-keyword": chalk.hex("#FF5555"),
+  "meta-string": chalk.hex("#F1FA8C"),
+  section: chalk.hex("#BD93F9").bold, // vivid purple bold
+  tag: chalk.hex("#FF79C6"), // hot pink
+  name: chalk.hex("#50FA7B"), // vivid green
+  attr: chalk.hex("#55FFFF"), // vivid cyan
+  attribute: chalk.hex("#55FFFF"), // vivid cyan
+  variable: chalk.hex("#FFB86C"), // vivid orange
+  bullet: chalk.hex("#FFB86C"), // vivid orange
+  code: chalk.hex("#F1FA8C"), // vivid yellow
   emphasis: chalk.italic,
   strong: chalk.bold,
   formula: chalk.inverse,
-  link: chalk.hex("#79c0ff").underline,
-  quote: chalk.hex("#8b949e").italic,
-  addition: chalk.hex("#7ee787"), // green
-  deletion: chalk.hex("#ff7b72"), // red
+  link: chalk.hex("#8BE9FD").underline, // bright cyan underline
+  quote: chalk.hex("#6272A4").italic, // muted blue italic
+  addition: chalk.hex("#50FA7B").bold, // vivid green
+  deletion: chalk.hex("#FF5555").bold, // vivid red
 };
 
 const md = new Marked(
@@ -56,7 +56,7 @@ const mdHighlight = new Marked(
       tab: 2,
     },
     {
-      theme: GITHUB_THEME,
+      theme: VIVID_THEME,
     },
   ),
 );
