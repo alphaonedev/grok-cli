@@ -6,13 +6,10 @@ declare module "marked-terminal" {
     tab?: number;
     reflowText?: boolean;
     width?: number;
-    code?: (code: string, lang?: string) => string;
   }
 
-  class TerminalRenderer {
+  export function markedTerminal(options?: TerminalRendererOptions): MarkedExtension;
+  export default class Renderer {
     constructor(options?: TerminalRendererOptions);
   }
-
-  export default function markedTerminal(options?: TerminalRendererOptions): MarkedExtension;
-  export { TerminalRenderer };
 }

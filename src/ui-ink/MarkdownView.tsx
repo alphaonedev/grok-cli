@@ -1,6 +1,6 @@
 import { Text } from "ink";
 import { Marked } from "marked";
-import markedTerminal from "marked-terminal";
+import { markedTerminal } from "marked-terminal";
 import React, { useMemo } from "react";
 
 const md = new Marked(markedTerminal());
