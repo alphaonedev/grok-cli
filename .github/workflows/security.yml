@@ -32,3 +32,11 @@ jobs:
         path: ./
         baseRef: ${{ github.event.pull_request.base.ref || github.ref }}
         headRef: ${{ github.event.pull_request.head.ref || github.sha }}
+    - name: Dependency Vulnerability Audit
+      run: |
+        bun audit 2>&1 || true
+        HIGH_COUNT=$(bun audit 2>&1 | grep -c "high:" || true)
+        if [ "$HIGH_COUNT" -gt 5 ]; then
+          exit 1
+        fi
+      
