@@ -291,8 +291,26 @@ write_metadata "$INSTALLED_VERSION"
 echo ""
 echo "Grok ${INSTALLED_VERSION} installed to ${INSTALL_DIR}/${BINARY_NAME}"
 echo ""
-echo "Run:"
-echo "  grok --help"
+
+# Check if grok is accessible in current PATH
+if command -v grok >/dev/null 2>&1; then
+  echo "Run:"
+  echo "  grok --help"
+else
+  echo "To start using grok, reload your shell:"
+  echo ""
+  current_shell=$(basename "${SHELL:-bash}")
+  case "$current_shell" in
+    zsh)  echo "  source ~/.zshrc" ;;
+    fish) echo "  source ~/.config/fish/config.fish" ;;
+    *)    echo "  source ~/.bashrc" ;;
+  esac
+  echo ""
+  echo "Or open a new terminal window."
+  echo ""
+  echo "Then run:"
+  echo "  grok --help"
+fi
 echo ""
 echo "To uninstall later:"
 echo "  grok uninstall"
