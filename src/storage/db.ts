@@ -29,12 +29,25 @@ export function getDatabasePath(): string {
 export function getDatabase(): SQLiteDatabase {
   if (db) return db;
 
-  const database = new BunSqliteDatabase(getDatabasePath());
+  const dbPath = getDatabasePath();
+  const database = new BunSqliteDatabase(dbPath);
   database.pragma("journal_mode = WAL");
   database.pragma("foreign_keys = ON");
   database.pragma("busy_timeout = 5000");
   database.pragma("synchronous = NORMAL");
   applyMigrations(database);
+
+  // Restrict file permissions — owner read/write only (prevents local user snooping)
+  try {
+    fs.chmodSync(dbPath, 0o600);
+    const walPath = `${dbPath}-wal`;
+    const shmPath = `${dbPath}-shm`;
+    if (fs.existsSync(walPath)) fs.chmodSync(walPath, 0o600);
+    if (fs.existsSync(shmPath)) fs.chmodSync(shmPath, 0o600);
+  } catch {
+    // Non-fatal — some filesystems don't support chmod
+  }
+
   db = database;
   return database;
 }

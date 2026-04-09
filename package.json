@@ -52,20 +52,22 @@
     "@ai-sdk/provider-utils": "^4.0.21",
     "@ai-sdk/xai": "3.0.67",
     "@coinbase/agentkit": "^0.10.4",
-    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@hono/node-server": "^1.19.13",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@npmcli/arborist": "^9.4.2",
     "@opentui/core": "^0.1.88",
     "@opentui/react": "^0.1.88",
     "agent-desktop": "^0.1.11",
     "ai": "6.0.116",
     "commander": "^12.1.0",
-    "diff": "^8.0.3",
+    "diff": "^8.0.4",
     "dotenv": "^16.6.1",
     "grammy": "^1.41.1",
     "react": "^19.2.4",
     "semver": "^7.7.4",
     "vscode-jsonrpc": "^8.2.1",
     "vscode-languageserver-types": "^3.17.5",
+    "yaml": "^2.8.3",
     "zod": "4.3.6"
   },
   "devDependencies": {
@@ -78,7 +80,13 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.4"
+  },
+  "overrides": {
+    "path-to-regexp": ">=8.4.0",
+    "picomatch": ">=4.0.4",
+    "yaml": ">=2.8.3",
+    "diff": ">=8.0.3"
   },
   "engines": {
     "node": ">=18.0.0"
