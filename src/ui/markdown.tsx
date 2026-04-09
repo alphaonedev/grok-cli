@@ -1,6 +1,5 @@
 import { RGBA, SyntaxStyle } from "@opentui/core";
 import { useMemo } from "react";
-import { CodeBlock } from "./code-block";
 import type { Theme } from "./theme";
 
 function buildSyntaxStyle(t: Theme): SyntaxStyle {
@@ -35,54 +34,19 @@ const TABLE_OPTIONS = {
   borderColor: "#333333",
 };
 
-interface Chunk {
-  kind: "md" | "code";
-  text: string;
-  lang: string;
-  lines: string[];
-}
-
-function splitChunks(content: string): Chunk[] {
-  const chunks: Chunk[] = [];
-  const lines = content.split("\n");
-  let md: string[] = [];
-  let code: string[] = [];
-  let inCode = false;
-  let lang = "";
-
-  for (const line of lines) {
-    if (line.trimStart().startsWith("```")) {
-      if (inCode) {
-        chunks.push({ kind: "code", text: "", lang, lines: code });
-        code = [];
-        lang = "";
-        inCode = false;
-      } else {
-        if (md.length > 0) {
-          chunks.push({ kind: "md", text: md.join("\n"), lang: "", lines: [] });
-          md = [];
-        }
-        inCode = true;
-        lang = line.trim().slice(3).trim();
-      }
-    } else if (inCode) {
-      code.push(line);
-    } else {
-      md.push(line);
-    }
-  }
-  if (md.length > 0) {
-    chunks.push({ kind: "md", text: md.join("\n"), lang: "", lines: [] });
-  }
-  return chunks;
+/**
+ * Check if content has fenced code blocks.
+ */
+function hasCodeBlocks(content: string): boolean {
+  const matches = content.match(/```/g);
+  return matches !== null && matches.length >= 2;
 }
 
 export function Markdown({ content, t }: { content: string; t: Theme }) {
   const syntaxStyle = useMemo(() => buildSyntaxStyle(t), [t]);
-  const chunks = useMemo(() => splitChunks(content), [content]);
 
-  // No code blocks — use <markdown> directly (fastest path)
-  if (chunks.length === 1 && chunks[0].kind === "md") {
+  // If no code blocks, render everything with <markdown> (full concealment)
+  if (!hasCodeBlocks(content)) {
     return (
       <markdown
         content={content}
@@ -96,25 +60,27 @@ export function Markdown({ content, t }: { content: string; t: Theme }) {
     );
   }
 
-  // Mixed content — split into markdown + code block chunks
+  // Has code blocks — render full content with <markdown> for all non-code elements,
+  // PLUS render CodeBlock components after for syntax highlighting.
+  // The <markdown> will show code blocks as plain monospace (no highlighting).
+  // The CodeBlock components render below with colors.
+
+  // Strategy: pass full content to <markdown> (handles headers, bold, lists, tables)
+  // Code blocks get OpenTUI's default monospace rendering (dark bg, no color).
+  // This is the safe path — everything renders, code just isn't colorized.
+
+  // TODO: When OpenTUI fixes WASM loading, remove this branch and let
+  // tree-sitter handle code block highlighting natively.
+
   return (
-    <box flexDirection="column" flexShrink={0}>
-      {chunks.map((chunk, i) =>
-        chunk.kind === "md" ? (
-          <markdown
-            key={`md-${i}`}
-            content={chunk.text}
-            syntaxStyle={syntaxStyle}
-            conceal={true}
-            // @ts-expect-error MarkdownProps omits inherited Renderable.selectable
-            selectable={true}
-            tableOptions={TABLE_OPTIONS}
-            flexShrink={0}
-          />
-        ) : (
-          <CodeBlock key={`cb-${i}`} lang={chunk.lang} lines={chunk.lines} />
-        ),
-      )}
-    </box>
+    <markdown
+      content={content}
+      syntaxStyle={syntaxStyle}
+      conceal={true}
+      // @ts-expect-error MarkdownProps omits inherited Renderable.selectable
+      selectable={true}
+      tableOptions={TABLE_OPTIONS}
+      flexShrink={0}
+    />
   );
 }
