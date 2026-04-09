@@ -169,19 +169,14 @@ function CodeBlock({ lang, lines }: { lang: string; lines: string[] }) {
     <box flexDirection="column" flexShrink={0} marginTop={1} marginBottom={1}>
       <text fg={borderFg}>{`┌─ ${label} ${rule}`}</text>
       {lines.map((line, i) => (
-        <span key={i}>
-          <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
-            {" "}
-          </text>
+        <text key={i} bg={bgColor} fg={RGBA.fromHex(C.default)}>
+          <span> </span>
           {tokenizeLine(line).map((tok, j) => (
-            <text key={j} fg={RGBA.fromHex(tok.color)} bg={bgColor}>
+            <span key={j} fg={RGBA.fromHex(tok.color)}>
               {tok.text}
-            </text>
+            </span>
           ))}
-          <text fg={RGBA.fromHex(C.default)} bg={bgColor}>
-            {" \n"}
-          </text>
-        </span>
+        </text>
       ))}
       <text fg={borderFg}>{`└${"─".repeat(46)}`}</text>
     </box>
