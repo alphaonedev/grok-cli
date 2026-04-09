@@ -7,7 +7,7 @@ import { useMemo } from "react";
 // Only syntax highlighting colors — no structural overrides
 const md = new Marked(
   markedTerminal(
-    {},
+    { showSectionPrefix: false },
     {
       theme: {
         keyword: chalk.hex("#FF5555").bold,
