@@ -120,19 +120,50 @@ footer a { color: var(--muted); }
   </section>
 
   <section>
-    <h2>Setup</h2>
+    <h2>Full Configuration</h2>
+    <p style="color:var(--muted);margin-bottom:16px;">Complete <code>~/.grok/user-settings.json</code> &mdash; copy, paste, replace the API key.</p>
 
-    <h3>1. API Key</h3>
-    <div class="config-block"><pre><span class="comment"># Set your xAI API key</span>
-<span class="key">export</span> <span class="str">GROK_API_KEY</span>=xai-YOUR_KEY_HERE</pre></div>
-
-    <h3>2. Configuration (optional)</h3>
-    <div class="config-block"><pre><span class="comment"># Copy the example config with 10 sub-agents</span>
-cp docs/user-settings-example.json ~/.grok/user-settings.json</pre></div>
-
-    <h3>3. ai-memory (optional)</h3>
-    <div class="config-block"><pre><span class="comment">// Add to ~/.grok/user-settings.json</span>
+    <div class="config-block"><pre><span class="comment">// ~/.grok/user-settings.json</span>
 {
+  <span class="key">"apiKey"</span>: <span class="str">"YOUR xAI Grok API KEY GOES HERE"</span>,
+  <span class="key">"baseURL"</span>: <span class="str">"https://api.x.ai/v1"</span>,
+  <span class="key">"defaultModel"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,
+  <span class="key">"models"</span>: [
+    <span class="str">"grok-4.20-reasoning"</span>,
+    <span class="str">"grok-4.20-non-reasoning"</span>,
+    <span class="str">"grok-4.20-multi-agent-0309"</span>,
+    <span class="str">"grok-4-1-fast-reasoning"</span>,
+    <span class="str">"grok-4-1-fast-non-reasoning"</span>,
+    <span class="str">"grok-4-fast-reasoning"</span>,
+    <span class="str">"grok-4-fast-non-reasoning"</span>,
+    <span class="str">"grok-4"</span>,
+    <span class="str">"grok-4-latest"</span>,
+    <span class="str">"grok-code-fast-1"</span>,
+    <span class="str">"grok-3"</span>,
+    <span class="str">"grok-3-latest"</span>,
+    <span class="str">"grok-3-fast"</span>,
+    <span class="str">"grok-3-mini"</span>,
+    <span class="str">"grok-3-mini-fast"</span>
+  ],
+  <span class="key">"settingsVersion"</span>: 2,
+  <span class="key">"subAgents"</span>: [
+    { <span class="key">"name"</span>: <span class="str">"architect"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Senior software architect..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"code-review"</span>,    <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Thorough code reviewer..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"debug"</span>,          <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Expert debugger..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"security-audit"</span>, <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Application security auditor..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"implement"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Implementation engineer..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"refactor"</span>,       <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Refactoring specialist..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"test-writer"</span>,    <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Test engineer..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"docs"</span>,           <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-non-reasoning"</span>,  <span class="key">"instruction"</span>: <span class="str">"Technical writer..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"quick-fix"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-non-reasoning"</span>,  <span class="key">"instruction"</span>: <span class="str">"Fast patch agent..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"data-ops"</span>,       <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-non-reasoning"</span>,  <span class="key">"instruction"</span>: <span class="str">"Data operations agent..."</span> }
+  ]
+}</pre></div>
+    <p style="color:var(--muted);font-size:0.85rem;margin-top:12px;">Full sub-agent instructions in <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/user-settings-example.json">user-settings-example.json</a>. See <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/CONFIGURATION.md">CONFIGURATION.md</a> for the complete guide.</p>
+
+    <h3 style="margin-top:32px;">ai-memory Integration (optional)</h3>
+    <p style="color:var(--muted);margin-bottom:12px;">Add persistent cross-session memory. Merge into the config above:</p>
+    <div class="config-block"><pre>{
   <span class="key">"mcp"</span>: {
     <span class="key">"servers"</span>: [{
       <span class="key">"id"</span>: <span class="str">"ai-memory"</span>,

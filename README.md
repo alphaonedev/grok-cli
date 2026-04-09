@@ -86,18 +86,56 @@ export GROK_API_KEY=xai-YOUR_KEY_HERE
 # Or one-time: grok -k xai-YOUR_KEY_HERE
 ```
 
-### 2. Configuration (optional)
+### 2. Configuration
 
-Copy the example configuration:
+Copy the example config and replace the API key:
 
 ```bash
+mkdir -p ~/.grok
 cp docs/user-settings-example.json ~/.grok/user-settings.json
 ```
 
-This sets up:
-- **Default model**: `grok-4-1-fast-reasoning` (2M context, $0.20/$0.50 per M tokens)
-- **10 sub-agents** across 3 model tiers (deep/standard/fast)
-- **Full model catalog** including grok-4.20 flagship models
+Or create `~/.grok/user-settings.json` with the full configuration:
+
+```json
+{
+  "apiKey": "YOUR xAI Grok API KEY GOES HERE",
+  "baseURL": "https://api.x.ai/v1",
+  "defaultModel": "grok-4-1-fast-reasoning",
+  "models": [
+    "grok-4.20-reasoning",
+    "grok-4.20-non-reasoning",
+    "grok-4.20-multi-agent-0309",
+    "grok-4-1-fast-reasoning",
+    "grok-4-1-fast-non-reasoning",
+    "grok-4-fast-reasoning",
+    "grok-4-fast-non-reasoning",
+    "grok-4",
+    "grok-4-latest",
+    "grok-code-fast-1",
+    "grok-3",
+    "grok-3-latest",
+    "grok-3-fast",
+    "grok-3-mini",
+    "grok-3-mini-fast"
+  ],
+  "settingsVersion": 2,
+  "subAgents": [
+    { "name": "architect",      "model": "grok-4.20-reasoning",         "instruction": "Senior software architect..." },
+    { "name": "code-review",    "model": "grok-4.20-reasoning",         "instruction": "Thorough code reviewer..." },
+    { "name": "debug",          "model": "grok-4.20-reasoning",         "instruction": "Expert debugger..." },
+    { "name": "security-audit", "model": "grok-4.20-reasoning",         "instruction": "Application security auditor..." },
+    { "name": "implement",      "model": "grok-4-1-fast-reasoning",     "instruction": "Implementation engineer..." },
+    { "name": "refactor",       "model": "grok-4-1-fast-reasoning",     "instruction": "Refactoring specialist..." },
+    { "name": "test-writer",    "model": "grok-4-1-fast-reasoning",     "instruction": "Test engineer..." },
+    { "name": "docs",           "model": "grok-4-1-fast-non-reasoning", "instruction": "Technical writer..." },
+    { "name": "quick-fix",      "model": "grok-4-1-fast-non-reasoning", "instruction": "Fast patch agent..." },
+    { "name": "data-ops",       "model": "grok-4-1-fast-non-reasoning", "instruction": "Data operations agent..." }
+  ]
+}
+```
+
+Full sub-agent instructions in [docs/user-settings-example.json](docs/user-settings-example.json). Complete guide in [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the complete guide.
 
