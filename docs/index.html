@@ -249,7 +249,7 @@ footer a { color: var(--muted); }
       </div>
       <div class="feature">
         <h4>Full Grok Model Lineup</h4>
-        <p>15 models from grok-4.20-reasoning ($2/M) to grok-3-mini-fast. All with 2M token context. Default: grok-4-1-fast-reasoning ($0.20/M).</p>
+        <p>15 models from grok-4.20-reasoning ($2/M) to grok-3-mini-fast. All with 2M token context. Default: grok-4-1-fast-non-reasoning ($0.20/M) for instant responses.</p>
       </div>
     </div>
   </section>
@@ -262,7 +262,7 @@ footer a { color: var(--muted); }
 {
   <span class="key">"apiKey"</span>: <span class="str">"YOUR xAI Grok API KEY GOES HERE"</span>,
   <span class="key">"baseURL"</span>: <span class="str">"https://api.x.ai/v1"</span>,
-  <span class="key">"defaultModel"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,
+  <span class="key">"defaultModel"</span>: <span class="str">"grok-4-1-fast-non-reasoning"</span>,
   <span class="key">"models"</span>: [
     <span class="str">"grok-4.20-reasoning"</span>, <span class="str">"grok-4.20-non-reasoning"</span>, <span class="str">"grok-4.20-multi-agent-0309"</span>,
     <span class="str">"grok-4-1-fast-reasoning"</span>, <span class="str">"grok-4-1-fast-non-reasoning"</span>,
@@ -311,8 +311,8 @@ footer a { color: var(--muted); }
       <tbody>
         <tr><td><code>grok-4.20-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Architecture, complex debugging, security audit</td></tr>
         <tr><td><code>grok-4.20-non-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Fast flagship without thinking tokens</td></tr>
-        <tr><td><code>grok-4-1-fast-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td><strong>Default</strong> &mdash; daily coding, implementation</td></tr>
-        <tr><td><code>grok-4-1-fast-non-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td>Docs, bulk transforms, quick fixes</td></tr>
+        <tr><td><code>grok-4-1-fast-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td>Deep analysis sub-agents</td></tr>
+        <tr><td><code>grok-4-1-fast-non-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td><strong>Default</strong> &mdash; instant responses, daily coding</td></tr>
       </tbody>
     </table>
   </section>
