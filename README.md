@@ -107,7 +107,7 @@ Add persistent cross-session memory:
 
 ```bash
 # Install ai-memory
-curl -fsSL https://raw.githubusercontent.com/alphaonedev/ai-memory-mcp-grok/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/alphaonedev/ai-memory-mcp/main/install.sh | bash
 ```
 
 Add to `~/.grok/user-settings.json`:
@@ -129,7 +129,7 @@ Add to `~/.grok/user-settings.json`:
 }
 ```
 
-The agent will automatically recall relevant memories on session start and store important findings for future sessions. See [ai-memory-mcp-grok](https://github.com/alphaonedev/ai-memory-mcp-grok) for details.
+The agent will automatically recall relevant memories on session start and store important findings for future sessions. See [ai-memory-mcp](https://github.com/alphaonedev/ai-memory-mcp) for details.
 
 ---
 
