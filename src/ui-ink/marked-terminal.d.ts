@@ -8,7 +8,10 @@ declare module "marked-terminal" {
     width?: number;
   }
 
-  export function markedTerminal(options?: TerminalRendererOptions): MarkedExtension;
+  export function markedTerminal(
+    options?: TerminalRendererOptions,
+    highlightOptions?: Record<string, unknown>,
+  ): MarkedExtension;
   export default class Renderer {
     constructor(options?: TerminalRendererOptions);
   }
