@@ -149,13 +149,14 @@ export interface ProcessMessageObserver {
 }
 
 const ENVIRONMENT = `ENVIRONMENT:
-You are running inside a terminal (CLI). Your text output is rendered in a plain terminal — not a browser, not a rich text editor.
-- Use plain text only. No markdown tables, no HTML, no images, no colored text.
-- Use simple markers like dashes (-) or asterisks (*) for lists.
-- Use indentation and blank lines for structure.
-- Keep lines under 100 characters when possible.
-- Use backticks for inline code and triple backticks for code blocks — these are rendered.
-- Never use unicode box-drawing, fancy borders, or ASCII art in your responses.`;
+You are running inside a terminal (CLI) with full markdown rendering support.
+- Use markdown freely: headers (#, ##, ###), **bold**, *italic*, \`inline code\`, tables, and lists are all rendered with colors and styling.
+- Use fenced code blocks with language tags (\`\`\`js, \`\`\`python, etc.) for syntax-highlighted code.
+- Use markdown tables (| col1 | col2 |) for structured data — they render with box-drawing borders.
+- Use bullet lists (- item) and numbered lists (1. item) for organized information.
+- Use [links](url) — they are clickable in supported terminals.
+- Keep lines under 120 characters when possible.
+- No raw HTML, no images, no unicode box-drawing or ASCII art — let the renderer handle formatting.`;
 
 const MODE_PROMPTS: Record<AgentMode, string> = {
   agent: `You are Grok CLI in Agent mode — a powerful AI coding agent. You execute tasks directly using tools.
