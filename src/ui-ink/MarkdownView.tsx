@@ -125,6 +125,9 @@ function postProcess(text: string): string {
   result = result.replace(/─{10,}\n\s*-{3,}\n/g, "─".repeat(60) + "\n");
   result = result.replace(/\n-{3,}\n/g, "\n");
 
+  // Clean up links: "Text (https://url)" → "Text — url" (compact, no parens)
+  result = result.replace(/\(https?:\/\/([^)]+)\)/g, chalk.hex("#6272A4")("— $1"));
+
   return result;
 }
 

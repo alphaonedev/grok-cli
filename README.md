@@ -10,11 +10,15 @@
 
 Fork of [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) with these enhancements:
 
+- **Ink React terminal UI** --- full markdown rendering with headers, bold, italic, tables, code blocks, lists, links, blockquotes. Vivid syntax highlighting for 25+ languages (Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, Ruby, PHP, Bash, and more)
+- **TOON compression** --- 30-50% token savings on all structured tool results
 - **ai-memory MCP integration** --- persistent cross-session memory with vector search and auto-recall
 - **Session-scoped MCP connections** --- connect once per session, not per message
 - **MCP tools in all modes** --- memory works in plan, ask, and agent modes
-- **Security hardening** --- MCP tool name collision prevention, description sanitization, proper cleanup
+- **Security hardening** --- AES-256-GCM storage encryption, MCP tool name collision prevention, description sanitization, 16 red team fixes
 - **10 custom sub-agents** --- architect, code-review, debug, implement, refactor, test-writer, docs, quick-fix, data-ops, security-audit
+- **Smart paste detection** --- large pastes show `[Pasted N chars]` instead of flooding the input
+- **Live processing timer** --- elapsed time with context-aware status (Thinking / Running tools / Generating)
 
 Real-time **X search**, **web search**, the full Grok model lineup (grok-4.20, grok-4-1-fast), **sub-agents on by default**, **remote control via Telegram**, and a terminal UI built with **Bun** and **Ink**.
 

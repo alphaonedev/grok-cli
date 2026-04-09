@@ -30,9 +30,16 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [elapsedMs, setElapsedMs] = useState(0);
+  const [clock, setClock] = useState(() => new Date().toLocaleTimeString());
   const processedInitial = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef(0);
+
+  // Live clock
+  useEffect(() => {
+    const id = setInterval(() => setClock(new Date().toLocaleTimeString()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const model = agent.getModel();
   const mode = agent.getMode();
@@ -264,6 +271,10 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
           {messages.length} messages
           {" · "}
           ctrl+c exit
+          {"  "}
+        </Text>
+        <Text bold color="white">
+          {clock}
         </Text>
       </Box>
     </Box>
