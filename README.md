@@ -1,34 +1,60 @@
-# There are many coding agents. **This one is powered by Grok.**
+# grok-cli (AlphaOne Fork)
 
-[![CI](https://github.com/superagent-ai/grok-cli/actions/workflows/typecheck.yml/badge.svg)](https://github.com/superagent-ai/grok-cli/actions/workflows/typecheck.yml)
-[![npm](https://img.shields.io/npm/v/grok-dev.svg)](https://www.npmjs.com/package/grok-dev)
+**AI coding agent powered by xAI Grok** --- with persistent memory, security hardening, and 10 custom sub-agents.
+
+[![Release](https://img.shields.io/github/v/release/alphaonedev/grok-cli?label=release)](https://github.com/alphaonedev/grok-cli/releases)
+[![CI](https://github.com/alphaonedev/grok-cli/actions/workflows/typecheck.yml/badge.svg)](https://github.com/alphaonedev/grok-cli/actions/workflows/typecheck.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.x-000000?logo=bun&logoColor=white)](https://bun.sh/)
 
-The rest borrowed from each other. We borrowed from *all of them*, then wired it to **Grok**—real-time **X search**, **web search**, `grok-code-fast-1` and the full Grok model lineup, **sub-agents on by default**, **remote control via Telegram** (pair once, drive the agent from your phone while the CLI runs), and a terminal UI that doesn’t feel like it was assembled in a hurry.
+Fork of [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) with these enhancements:
 
-Open source. Terminal-native. Built with **Bun** and **OpenTUI**. If you want vibes *and* velocity, you’re in the right repo.
+- **ai-memory MCP integration** --- persistent cross-session memory with vector search and auto-recall
+- **Session-scoped MCP connections** --- connect once per session, not per message
+- **MCP tools in all modes** --- memory works in plan, ask, and agent modes
+- **Security hardening** --- MCP tool name collision prevention, description sanitization, proper cleanup
+- **10 custom sub-agents** --- architect, code-review, debug, implement, refactor, test-writer, docs, quick-fix, data-ops, security-audit
 
-Community-built and unofficial. This project is not affiliated with or endorsed by xAI, and it is not the official Grok CLI.
+Real-time **X search**, **web search**, the full Grok model lineup (grok-4.20, grok-4-1-fast), **sub-agents on by default**, **remote control via Telegram**, and a terminal UI built with **Bun** and **OpenTUI**.
 
-[https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb](https://github.com/user-attachments/assets/7ca4f6df-50ca-4e9c-91b2-d4abad5c66cb)
+Community-built and unofficial. Not affiliated with or endorsed by xAI.
 
 ---
 
 ## Install
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/superagent-ai/grok-cli/main/install.sh | bash
-```
-
-**Alternative installs** (requires Bun on PATH):
+### One-line install (recommended)
 
 ```bash
-bun add -g grok-dev
+curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash
 ```
 
-**Self-management** (script-installed only):
+Downloads a prebuilt binary for your platform (macOS arm64, Linux x64, Windows x64) to `~/.grok/bin/grok`.
+
+### Install a specific version
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash -s -- --version 1.2.0
+```
+
+### Install from source (requires Bun)
+
+```bash
+git clone https://github.com/alphaonedev/grok-cli.git
+cd grok-cli
+bun install
+bun run dev  # run in development mode
+```
+
+### Build standalone binary from source
+
+```bash
+bun run build:binary
+# Binary at: dist/grok-standalone
+```
+
+### Self-management (script-installed only)
 
 ```bash
 grok update
@@ -37,7 +63,73 @@ grok uninstall --dry-run
 grok uninstall --keep-config
 ```
 
-**Prerequisites:** a **Grok API key** from [x.ai](https://x.ai) and a modern terminal emulator for the interactive OpenTUI experience. Headless `--prompt` mode does not depend on terminal UI support. If you want host desktop automation via the built-in computer sub-agent, also enable **Accessibility** permission for your terminal app on macOS.
+### Prerequisites
+
+- **Grok API key** from [x.ai](https://x.ai)
+- Modern terminal emulator for the interactive OpenTUI experience
+- Headless `--prompt` mode does not depend on terminal UI support
+- For host desktop automation via the computer sub-agent, enable **Accessibility** permission for your terminal app on macOS
+
+---
+
+## Setup
+
+### 1. API Key
+
+Set your xAI API key (pick one method):
+
+```bash
+# Environment variable (recommended)
+export GROK_API_KEY=xai-YOUR_KEY_HERE
+
+# Or add to ~/.grok/user-settings.json
+# Or one-time: grok -k xai-YOUR_KEY_HERE
+```
+
+### 2. Configuration (optional)
+
+Copy the example configuration:
+
+```bash
+cp docs/user-settings-example.json ~/.grok/user-settings.json
+```
+
+This sets up:
+- **Default model**: `grok-4-1-fast-reasoning` (2M context, $0.20/$0.50 per M tokens)
+- **10 sub-agents** across 3 model tiers (deep/standard/fast)
+- **Full model catalog** including grok-4.20 flagship models
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the complete guide.
+
+### 3. ai-memory (optional, recommended)
+
+Add persistent cross-session memory:
+
+```bash
+# Install ai-memory
+curl -fsSL https://raw.githubusercontent.com/alphaonedev/ai-memory-mcp-grok/main/install.sh | bash
+```
+
+Add to `~/.grok/user-settings.json`:
+
+```json
+{
+  "mcp": {
+    "servers": [
+      {
+        "id": "ai-memory",
+        "label": "AI Memory",
+        "enabled": true,
+        "transport": "stdio",
+        "command": "ai-memory",
+        "args": ["mcp", "--tier", "semantic"]
+      }
+    ]
+  }
+}
+```
+
+The agent will automatically recall relevant memories on session start and store important findings for future sessions. See [ai-memory-mcp-grok](https://github.com/alphaonedev/ai-memory-mcp-grok) for details.
 
 ---
 
