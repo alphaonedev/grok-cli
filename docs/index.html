@@ -36,7 +36,12 @@ header p.tagline { font-size: 1.15rem; color: var(--muted); max-width: 600px; ma
 
 .install-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; margin: 40px auto; max-width: 700px; }
 .install-box h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; }
-.install-box code { display: block; background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; font-size: 0.95rem; color: var(--green); font-family: 'SF Mono', 'Fira Code', monospace; overflow-x: auto; }
+.install-box .install-row { position: relative; }
+.install-box code { display: block; background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 14px 50px 14px 18px; font-size: 0.95rem; color: var(--green); font-family: 'SF Mono', 'Fira Code', monospace; overflow-x: auto; cursor: pointer; user-select: all; -webkit-user-select: all; }
+.install-box code:hover { border-color: var(--accent); }
+.copy-btn { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); background: transparent; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); padding: 4px 8px; font-size: 0.75rem; cursor: pointer; font-family: var(--font); transition: all 0.15s; }
+.copy-btn:hover { color: var(--text); border-color: var(--accent); }
+.copy-btn.copied { color: var(--green); border-color: var(--green); }
 
 section { padding: 48px 0; border-bottom: 1px solid var(--border); }
 section h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
@@ -86,7 +91,10 @@ footer a { color: var(--muted); }
 
   <div class="install-box">
     <h3>Install</h3>
-    <code>curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash</code>
+    <div class="install-row">
+      <code id="install-cmd" onclick="copyInstall()">curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash</code>
+      <button class="copy-btn" id="copy-btn" onclick="copyInstall()" title="Copy to clipboard">Copy</button>
+    </div>
   </div>
 
   <section>
@@ -231,5 +239,23 @@ footer a { color: var(--muted); }
   </div>
 </footer>
 
+<script>
+function copyInstall() {
+  var text = document.getElementById('install-cmd').textContent;
+  var btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }).catch(function() {
+    var r = document.createRange();
+    r.selectNodeContents(document.getElementById('install-cmd'));
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    try { document.execCommand('copy'); btn.textContent = 'Copied!'; btn.classList.add('copied'); setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000); } catch(e) {}
+  });
+}
+</script>
 </body>
 </html>
