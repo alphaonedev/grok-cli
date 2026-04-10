@@ -22,37 +22,33 @@ The complete `~/.grok/user-settings.json` with all fields:
   "baseURL": "https://api.x.ai/v1",
   "defaultModel": "grok-4-1-fast-non-reasoning",
   "models": [
-    "grok-4.20-reasoning",
-    "grok-4.20-non-reasoning",
+    "grok-4.20-0309-reasoning",
+    "grok-4.20-0309-non-reasoning",
     "grok-4.20-multi-agent-0309",
     "grok-4-1-fast-reasoning",
     "grok-4-1-fast-non-reasoning",
     "grok-4-fast-reasoning",
     "grok-4-fast-non-reasoning",
-    "grok-4",
-    "grok-4-latest",
+    "grok-4-0709",
     "grok-code-fast-1",
     "grok-3",
-    "grok-3-latest",
-    "grok-3-fast",
-    "grok-3-mini",
-    "grok-3-mini-fast"
+    "grok-3-mini"
   ],
   "settingsVersion": 2,
   "subAgents": [
     {
       "name": "architect",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Senior software architect. Design systems, evaluate trade-offs, plan implementations, review PRs for architectural issues. Think deeply about scalability, maintainability, and failure modes."
     },
     {
       "name": "code-review",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Thorough code reviewer. Find bugs, security vulnerabilities, race conditions, memory leaks, and logic errors. Suggest concrete fixes with code. Check for OWASP top 10, input validation, and error handling."
     },
     {
       "name": "debug",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Expert debugger. Analyze stack traces, reproduce issues, trace data flow, identify root causes. Walk through code step by step. Never guess — prove the cause before suggesting a fix."
     },
     {
@@ -87,7 +83,7 @@ The complete `~/.grok/user-settings.json` with all fields:
     },
     {
       "name": "security-audit",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Application security auditor. Analyze code for injection vulnerabilities, auth bypasses, insecure deserialization, secrets exposure, SSRF, and privilege escalation. Reference CWE IDs. Provide severity ratings and remediation steps."
     }
   ]
@@ -137,9 +133,9 @@ Recommended default for interactive use:
 - 2M token context window (largest available across all frontier models)
 - Non-reasoning for instant responses (no thinking delay)
 - $0.20/M input, $0.50/M output (10x cheaper than flagship grok-4.20)
-- Use `grok-4-1-fast-reasoning` or `grok-4.20-reasoning` for deep analysis via sub-agents
+- Use `grok-4-1-fast-reasoning` or `grok-4.20-0309-reasoning` for deep analysis via sub-agents
 
-Override per-session with `grok --model grok-4.20-reasoning` or per-project in `.grok/settings.json`.
+Override per-session with `grok --model grok-4.20-0309-reasoning` or per-project in `.grok/settings.json`.
 
 ### Settings Version
 
@@ -159,8 +155,8 @@ The `models` array defines which models appear in the model selector. All models
 
 | Model | Context | Input $/M | Output $/M | Best For |
 |-------|---------|-----------|------------|----------|
-| `grok-4.20-reasoning` | 2M | $2.00 | $6.00 | Deep architecture, complex debugging, security analysis |
-| `grok-4.20-non-reasoning` | 2M | $2.00 | $6.00 | Fast flagship without thinking tokens, lower latency |
+| `grok-4.20-0309-reasoning` | 2M | $2.00 | $6.00 | Deep architecture, complex debugging, security analysis |
+| `grok-4.20-0309-non-reasoning` | 2M | $2.00 | $6.00 | Fast flagship without thinking tokens, lower latency |
 | `grok-4.20-multi-agent-0309` | 2M | $2.00 | $6.00 | Server-side multi-agent orchestration (Responses API only) |
 
 ### Fast & Long-Context Models
@@ -176,11 +172,10 @@ The `models` array defines which models appear in the model selector. All models
 
 | Model | Context | Best For |
 |-------|---------|----------|
-| `grok-4` / `grok-4-latest` | 256K | Frontier quality, smaller context window |
+| `grok-4-0709` | 256K | Frontier quality, smaller context window |
 | `grok-code-fast-1` | 2M | Legacy code-specialized model |
-| `grok-3` / `grok-3-latest` | varies | Previous generation |
-| `grok-3-fast` | varies | Previous generation fast |
-| `grok-3-mini` / `grok-3-mini-fast` | varies | Lightweight, supports reasoning effort control |
+| `grok-3` | varies | Previous generation |
+| `grok-3-mini` | varies | Lightweight, supports reasoning effort control |
 
 ---
 
@@ -194,7 +189,7 @@ Custom sub-agents specialize the Grok agent for different tasks. Each needs `nam
 
 | Tier | Model | Cost | Sub-Agents |
 |------|-------|------|------------|
-| **Deep** | `grok-4.20-reasoning` | $2.00 / $6.00 per M | architect, code-review, debug, security-audit |
+| **Deep** | `grok-4.20-0309-reasoning` | $2.00 / $6.00 per M | architect, code-review, debug, security-audit |
 | **Standard** | `grok-4-1-fast-reasoning` | $0.20 / $0.50 per M | implement, refactor, test-writer |
 | **Fast** | `grok-4-1-fast-non-reasoning` | $0.20 / $0.50 per M | docs, quick-fix, data-ops |
 

@@ -218,7 +218,7 @@ footer a { color: var(--muted); }
         <tr><td>Generate docs</td><td>docs</td><td>Fast</td><td>~8K</td><td class="cost">$0.004</td></tr>
       </tbody>
     </table>
-    <p style="color:var(--muted);font-size:0.85rem;margin-top:8px;">Deep model (grok-4.20-reasoning) is 10x the cost but only used for architect, code-review, debug, and security-audit. The fast model handles 80% of work at $0.20/$0.50 per M tokens.</p>
+    <p style="color:var(--muted);font-size:0.85rem;margin-top:8px;">Deep model (grok-4.20-0309-reasoning) is 10x the cost but only used for architect, code-review, debug, and security-audit. The fast model handles 80% of work at $0.20/$0.50 per M tokens.</p>
   </section>
 
   <section>
@@ -250,7 +250,7 @@ footer a { color: var(--muted); }
       </div>
       <div class="feature">
         <h4>Full Grok Model Lineup</h4>
-        <p>15 models from grok-4.20-reasoning ($2/M) to grok-3-mini-fast. All with 2M token context. Default: grok-4-1-fast-non-reasoning ($0.20/M) for instant responses.</p>
+        <p>15 models from grok-4.20-0309-reasoning ($2/M) to grok-3-mini. All with 2M token context. Default: grok-4-1-fast-non-reasoning ($0.20/M) for instant responses.</p>
       </div>
     </div>
   </section>
@@ -265,18 +265,18 @@ footer a { color: var(--muted); }
   <span class="key">"baseURL"</span>: <span class="str">"https://api.x.ai/v1"</span>,
   <span class="key">"defaultModel"</span>: <span class="str">"grok-4-1-fast-non-reasoning"</span>,
   <span class="key">"models"</span>: [
-    <span class="str">"grok-4.20-reasoning"</span>, <span class="str">"grok-4.20-non-reasoning"</span>, <span class="str">"grok-4.20-multi-agent-0309"</span>,
+    <span class="str">"grok-4.20-0309-reasoning"</span>, <span class="str">"grok-4.20-0309-non-reasoning"</span>, <span class="str">"grok-4.20-multi-agent-0309"</span>,
     <span class="str">"grok-4-1-fast-reasoning"</span>, <span class="str">"grok-4-1-fast-non-reasoning"</span>,
     <span class="str">"grok-4-fast-reasoning"</span>, <span class="str">"grok-4-fast-non-reasoning"</span>,
-    <span class="str">"grok-4"</span>, <span class="str">"grok-4-latest"</span>, <span class="str">"grok-code-fast-1"</span>,
-    <span class="str">"grok-3"</span>, <span class="str">"grok-3-latest"</span>, <span class="str">"grok-3-fast"</span>, <span class="str">"grok-3-mini"</span>, <span class="str">"grok-3-mini-fast"</span>
+    <span class="str">"grok-4-0709"</span>, <span class="str">"grok-code-fast-1"</span>,
+    <span class="str">"grok-3"</span>, <span class="str">"grok-3-mini"</span>
   ],
   <span class="key">"settingsVersion"</span>: 2,
   <span class="key">"subAgents"</span>: [
-    { <span class="key">"name"</span>: <span class="str">"architect"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Senior software architect..."</span> },
-    { <span class="key">"name"</span>: <span class="str">"code-review"</span>,    <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Thorough code reviewer..."</span> },
-    { <span class="key">"name"</span>: <span class="str">"debug"</span>,          <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Expert debugger..."</span> },
-    { <span class="key">"name"</span>: <span class="str">"security-audit"</span>, <span class="key">"model"</span>: <span class="str">"grok-4.20-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Application security auditor..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"architect"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4.20-0309-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Senior software architect..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"code-review"</span>,    <span class="key">"model"</span>: <span class="str">"grok-4.20-0309-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Thorough code reviewer..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"debug"</span>,          <span class="key">"model"</span>: <span class="str">"grok-4.20-0309-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Expert debugger..."</span> },
+    { <span class="key">"name"</span>: <span class="str">"security-audit"</span>, <span class="key">"model"</span>: <span class="str">"grok-4.20-0309-reasoning"</span>,          <span class="key">"instruction"</span>: <span class="str">"Application security auditor..."</span> },
     { <span class="key">"name"</span>: <span class="str">"implement"</span>,      <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Implementation engineer..."</span> },
     { <span class="key">"name"</span>: <span class="str">"refactor"</span>,       <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Refactoring specialist..."</span> },
     { <span class="key">"name"</span>: <span class="str">"test-writer"</span>,    <span class="key">"model"</span>: <span class="str">"grok-4-1-fast-reasoning"</span>,      <span class="key">"instruction"</span>: <span class="str">"Test engineer..."</span> },
@@ -310,8 +310,8 @@ footer a { color: var(--muted); }
         <tr><th>Model</th><th>Context</th><th>Input $/M</th><th>Output $/M</th><th>Best For</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>grok-4.20-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Architecture, complex debugging, security audit</td></tr>
-        <tr><td><code>grok-4.20-non-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Fast flagship without thinking tokens</td></tr>
+        <tr><td><code>grok-4.20-0309-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Architecture, complex debugging, security audit</td></tr>
+        <tr><td><code>grok-4.20-0309-non-reasoning</code></td><td>2M</td><td>$2.00</td><td>$6.00</td><td>Fast flagship without thinking tokens</td></tr>
         <tr><td><code>grok-4-1-fast-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td>Deep analysis sub-agents</td></tr>
         <tr><td><code>grok-4-1-fast-non-reasoning</code></td><td>2M</td><td>$0.20</td><td>$0.50</td><td><strong>Default</strong> &mdash; instant responses, daily coding</td></tr>
       </tbody>
@@ -325,7 +325,7 @@ footer a { color: var(--muted); }
         <tr><th>Tier</th><th>Model</th><th>Agents</th><th>Cost per M</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Deep</strong></td><td><code>grok-4.20-reasoning</code></td><td>architect, code-review, debug, security-audit</td><td>$2.00 / $6.00</td></tr>
+        <tr><td><strong>Deep</strong></td><td><code>grok-4.20-0309-reasoning</code></td><td>architect, code-review, debug, security-audit</td><td>$2.00 / $6.00</td></tr>
         <tr><td><strong>Standard</strong></td><td><code>grok-4-1-fast-reasoning</code></td><td>implement, refactor, test-writer</td><td>$0.20 / $0.50</td></tr>
         <tr><td><strong>Fast</strong></td><td><code>grok-4-1-fast-non-reasoning</code></td><td>docs, quick-fix, data-ops</td><td>$0.20 / $0.50</td></tr>
       </tbody>

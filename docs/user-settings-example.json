@@ -3,37 +3,33 @@
   "baseURL": "https://api.x.ai/v1",
   "defaultModel": "grok-4-1-fast-non-reasoning",
   "models": [
-    "grok-4.20-reasoning",
-    "grok-4.20-non-reasoning",
+    "grok-4.20-0309-reasoning",
+    "grok-4.20-0309-non-reasoning",
     "grok-4.20-multi-agent-0309",
     "grok-4-1-fast-reasoning",
     "grok-4-1-fast-non-reasoning",
     "grok-4-fast-reasoning",
     "grok-4-fast-non-reasoning",
-    "grok-4",
-    "grok-4-latest",
+    "grok-4-0709",
     "grok-code-fast-1",
     "grok-3",
-    "grok-3-latest",
-    "grok-3-fast",
-    "grok-3-mini",
-    "grok-3-mini-fast"
+    "grok-3-mini"
   ],
   "settingsVersion": 2,
   "subAgents": [
     {
       "name": "architect",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Senior software architect. Design systems, evaluate trade-offs, plan implementations, review PRs for architectural issues. Think deeply about scalability, maintainability, and failure modes."
     },
     {
       "name": "code-review",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Thorough code reviewer. Find bugs, security vulnerabilities, race conditions, memory leaks, and logic errors. Suggest concrete fixes with code. Check for OWASP top 10, input validation, and error handling."
     },
     {
       "name": "debug",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Expert debugger. Analyze stack traces, reproduce issues, trace data flow, identify root causes. Walk through code step by step. Never guess — prove the cause before suggesting a fix."
     },
     {
@@ -68,7 +64,7 @@
     },
     {
       "name": "security-audit",
-      "model": "grok-4.20-reasoning",
+      "model": "grok-4.20-0309-reasoning",
       "instruction": "Application security auditor. Analyze code for injection vulnerabilities, auth bypasses, insecure deserialization, secrets exposure, SSRF, and privilege escalation. Reference CWE IDs. Provide severity ratings and remediation steps."
     }
   ]
