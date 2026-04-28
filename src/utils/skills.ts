@@ -30,21 +30,21 @@ function parseSkillFrontmatter(raw: string): { name?: string; description?: stri
   const lines = raw.split(/\r?\n/);
   const out: { name?: string; description?: string } = {};
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+    const line = lines[i] ?? "";
     const nameM = line.match(/^name:\s*(.*)$/);
     if (nameM) {
-      const rest = nameM[1].trim();
+      const rest = (nameM[1] ?? "").trim();
       out.name = stripQuotes(rest);
       continue;
     }
     const descM = line.match(/^description:\s*(.*)$/);
     if (descM) {
-      const rest = descM[1].trim();
+      const rest = (descM[1] ?? "").trim();
       if (rest === "|" || rest === ">" || rest === "|-" || rest === ">-") {
         i++;
         const block: string[] = [];
         while (i < lines.length) {
-          const L = lines[i];
+          const L = lines[i] ?? "";
           if (L.match(/^[a-zA-Z0-9_-]+:\s/) && !/^\s/.test(L)) break;
           if (/^\s/.test(L) || (block.length > 0 && L === "")) {
             block.push(L.replace(/^\s+/, ""));

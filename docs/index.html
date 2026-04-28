@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>grok-cli — AI Coding Agent Powered by xAI Grok | AlphaOne LLC</title>
-<meta name="description" content="Open-source AI coding agent with TOON compression, persistent memory, security hardening, and 10 custom sub-agents. 30-50% token savings. Built with Bun and Ink. By AlphaOne LLC.">
+<meta name="description" content="Open-source AI coding agent with TOON compression, persistent memory, security hardening, and 10 custom sub-agents. 30-50% token savings. Built with Bun and React Ink. By AlphaOne LLC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -336,11 +336,30 @@ footer a { color: var(--muted); }
     <h2>Documentation</h2>
     <p>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/CONFIGURATION.md">Configuration Guide</a> &mdash; full setup with model catalog, sub-agents, and cost analysis<br>
+      <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/HEADLESS_JSON_SPEC.md">Headless JSON Spec</a> &mdash; JSONL stream schema for <code>--format json</code> with jq cookbook<br>
+      <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/RELEASE_SIGNING.md">Release Signing</a> &mdash; macOS codesign + notarization setup<br>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/user-settings-example.json">Example Configuration</a> &mdash; copy-paste ready template<br>
       <a href="https://github.com/alphaonedev/ai-memory-mcp/blob/main/docs/GROK_INTEGRATION.md">ai-memory Integration</a> &mdash; persistent memory setup<br>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/AGENTS.md">Sub-Agents Guide</a> &mdash; built-in and custom agents<br>
       <a href="https://github.com/alphaonedev/grok-cli/releases">Releases</a> &middot;
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/CHANGELOG.md">Changelog</a>
+    </p>
+  </section>
+
+  <section>
+    <h2>Built with</h2>
+    <p>
+      The interactive console is built with
+      <a href="https://github.com/vadimdemedes/ink"><strong>React Ink</strong></a> (Vadim Demedes' React renderer for terminal UIs)
+      on the <a href="https://bun.sh/"><strong>Bun</strong></a> runtime. Markdown rendering uses
+      <a href="https://github.com/markedjs/marked">marked</a> +
+      <a href="https://github.com/mikaelbr/marked-terminal">marked-terminal</a> with
+      <a href="https://github.com/chalk/chalk">chalk</a> for ANSI colors.
+      Agent loop calls xAI via <a href="https://github.com/vercel/ai">Vercel AI SDK</a>.
+      Schema validation: <a href="https://github.com/colinhacks/zod">zod</a>.
+      Telegram: <a href="https://grammy.dev/">grammY</a>.
+      Tests: <a href="https://vitest.dev/">Vitest</a>.
+      Lint/format: <a href="https://biomejs.dev/">Biome</a>.
     </p>
   </section>
 

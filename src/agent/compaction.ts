@@ -272,7 +272,8 @@ function findTurnStartIndex(messages: ModelMessage[], entryIndex: number, startI
 export function findCutPoint(messages: ModelMessage[], startIndex: number, keepRecentTokens: number): CutPointResult {
   const cutPoints: number[] = [];
   for (let i = startIndex; i < messages.length; i++) {
-    if (isValidCutPoint(messages[i])) {
+    const msg = messages[i];
+    if (msg && isValidCutPoint(msg)) {
       cutPoints.push(i);
     }
   }
@@ -282,12 +283,14 @@ export function findCutPoint(messages: ModelMessage[], startIndex: number, keepR
   }
 
   let accumulatedTokens = 0;
-  let cutIndex = cutPoints[0];
+  let cutIndex = cutPoints[0] ?? startIndex;
 
   for (let i = messages.length - 1; i >= startIndex; i--) {
-    accumulatedTokens += estimateMessageTokens(messages[i]);
+    const msg = messages[i];
+    if (!msg) continue;
+    accumulatedTokens += estimateMessageTokens(msg);
     if (accumulatedTokens >= keepRecentTokens) {
-      cutIndex = cutPoints.find((index) => index >= i) ?? cutPoints[cutPoints.length - 1];
+      cutIndex = cutPoints.find((index) => index >= i) ?? cutPoints[cutPoints.length - 1] ?? startIndex;
       break;
     }
   }

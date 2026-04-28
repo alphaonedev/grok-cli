@@ -15,6 +15,7 @@ import {
 import { runTelegramHeadlessBridge } from "./telegram/headless-bridge";
 import { startScheduleDaemon } from "./tools/schedule";
 import { processAtMentions } from "./utils/at-mentions.js";
+import { getCrashLogPath, writeCrashLog } from "./utils/crash-log";
 import { runScriptManagedUninstall } from "./utils/install-manager";
 import {
   getApiKey,
@@ -34,20 +35,39 @@ import { buildVerifyPrompt, getVerifyCliError } from "./verify/entrypoint";
 
 dotenv.config();
 
+/**
+ * Exit codes (also documented in docs/HEADLESS_JSON_SPEC.md).
+ *   0 — success
+ *   1 — user error (bad flag, missing API key, bad config)
+ *   2 — transient error (network, rate-limit, retryable)
+ *   3 — agent or tool execution error (model returned an error,
+ *       tool call rejected, sandbox failure)
+ *   4 — internal panic (uncaught exception, unhandled rejection)
+ */
+export const EXIT_SUCCESS = 0;
+export const EXIT_USER_ERROR = 1;
+export const EXIT_TRANSIENT = 2;
+export const EXIT_AGENT_ERROR = 3;
+export const EXIT_PANIC = 4;
+
 const exitCleanlyOnSigterm = () => {
-  process.exit(0);
+  process.exit(EXIT_SUCCESS);
 };
 
 process.on("SIGTERM", exitCleanlyOnSigterm);
 
 process.on("uncaughtException", (err) => {
+  writeCrashLog("uncaughtException", err);
   console.error("Fatal:", err.message);
-  process.exit(1);
+  console.error(`Crash details written to ${getCrashLogPath()}`);
+  process.exit(EXIT_PANIC);
 });
 
 process.on("unhandledRejection", (reason) => {
+  writeCrashLog("unhandledRejection", reason);
   console.error("Unhandled rejection:", reason);
-  process.exit(1);
+  console.error(`Crash details written to ${getCrashLogPath()}`);
+  process.exit(EXIT_PANIC);
 });
 
 async function startInteractive(
@@ -135,7 +155,7 @@ function changeDirectoryOrExit(directory: string | undefined) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Cannot change to directory ${directory}: ${msg}`);
-    process.exit(1);
+    process.exit(EXIT_USER_ERROR);
   }
 }
 
@@ -200,7 +220,7 @@ async function runBackgroundDelegation(jobPath: string, options: CliOptions) {
     } catch {
       // Best effort — background tasks should fail silently if persistence is unavailable.
     }
-    process.exit(1);
+    process.exit(EXIT_AGENT_ERROR);
   } finally {
     await agent?.cleanup();
   }
@@ -229,15 +249,41 @@ function resolveConfig(options: CliOptions) {
   if (typeof options.apiKey === "string") saveUserSettings({ apiKey: options.apiKey });
   if (typeof options.model === "string") saveUserSettings({ defaultModel: normalizeModelId(options.model) });
 
+  warnIfSandboxOff(sandboxMode);
+
   return { apiKey, baseURL, model, maxToolRounds, sandboxMode, sandboxSettings };
+}
+
+/**
+ * Print a one-line warning to stderr when the agent is about to run
+ * shell commands directly on the host (no Shuru sandbox). Suppressible
+ * via GROK_SUPPRESS_SANDBOX_WARNING=1 for users who have made an
+ * informed choice.
+ */
+function warnIfSandboxOff(sandboxMode: SandboxMode): void {
+  if (sandboxMode !== "off") return;
+  if (process.env.GROK_SUPPRESS_SANDBOX_WARNING === "1") return;
+  if (!process.stderr.isTTY) return;
+  process.stderr.write(
+    "[33m! Sandbox is OFF. Shell commands run directly on your host.\n" +
+      "  Use --sandbox for Shuru-isolated execution. Set\n" +
+      "  GROK_SUPPRESS_SANDBOX_WARNING=1 to silence this warning.[0m\n",
+  );
 }
 
 function requireApiKey(apiKey: string | undefined): string {
   if (!apiKey) {
-    console.error(
-      "Error: API key required. Set GROK_API_KEY env var, use --api-key, or save to ~/.grok/user-settings.json",
-    );
-    process.exit(1);
+    console.error("");
+    console.error("  Grok API key required.");
+    console.error("");
+    console.error("  Get a key:        https://console.x.ai");
+    console.error("");
+    console.error("  Then set it via one of:");
+    console.error("    export GROK_API_KEY=xai-...");
+    console.error("    grok --api-key xai-...");
+    console.error('    echo \'{"apiKey":"xai-..."}\' > ~/.grok/user-settings.json');
+    console.error("");
+    process.exit(EXIT_USER_ERROR);
   }
 
   return apiKey;
@@ -253,7 +299,7 @@ function parseHeadlessOutputFormat(value: string): HeadlessOutputFormat {
 
 program
   .name("grok")
-  .description("AI coding agent powered by Grok — built with Bun and OpenTUI")
+  .description("AI coding agent powered by Grok — built with Bun and React Ink")
   .version(packageJson.version)
   .argument("[message...]", "Initial message to send")
   .option("-k, --api-key <key>", "Grok API key")
@@ -294,7 +340,7 @@ program
       const verifyError = getVerifyCliError({ hasPrompt: Boolean(options.prompt), hasMessageArgs: message.length > 0 });
       if (verifyError) {
         console.error(verifyError);
-        process.exit(1);
+        process.exit(EXIT_USER_ERROR);
       }
 
       await runHeadless(

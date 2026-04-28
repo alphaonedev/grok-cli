@@ -21,6 +21,7 @@ import {
 import { editFile, readFile, writeFile } from "../tools/file";
 import type { ScheduleDaemonStatus, ScheduleManager, StoredSchedule } from "../tools/schedule";
 import type { AgentMode, TaskRequest, ToolResult } from "../types/index";
+import { debugLogger } from "../utils/debug-log";
 import { type CustomSubagentConfig, loadPaymentSettings, loadValidSubAgents } from "../utils/settings";
 import type { XaiProvider } from "./client";
 import {
@@ -122,7 +123,9 @@ export function createTools(
         };
 
         if (result.success) {
-          executePostToolHooks("bash", toolInput, output, cwd(), options.sessionId, abortSignal).catch(() => {});
+          executePostToolHooks("bash", toolInput, output, cwd(), options.sessionId, abortSignal).catch(
+            debugLogger("grok/tools"),
+          );
         } else {
           executePostToolFailureHooks(
             "bash",
@@ -131,7 +134,7 @@ export function createTools(
             cwd(),
             options.sessionId,
             abortSignal,
-          ).catch(() => {});
+          ).catch(debugLogger("grok/tools"));
         }
 
         return output;

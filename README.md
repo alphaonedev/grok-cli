@@ -542,7 +542,53 @@ Other useful commands:
 bun run dev      # run from source (Bun)
 bun run typecheck
 bun run lint
+bun run test     # vitest, also gated in CI as of v1.7.0
 ```
+
+### Optional environment variables
+
+| Variable | What it does |
+|---|---|
+| `GROK_DEBUG=1` | Enable per-call debug logging to `~/.grok/debug.log` (covers swallowed `.catch` paths in hooks/MCP/clipboard). Off by default. |
+| `GROK_SUPPRESS_SANDBOX_WARNING=1` | Silence the yellow stderr banner that prints when `--sandbox` is off. |
+| `GROK_TELEGRAM_RATE_LIMIT_MAX` | Max messages per user before pause (default `10`). |
+| `GROK_TELEGRAM_RATE_LIMIT_WINDOW_MS` | Sliding window in ms (default `60000`). |
+| `GROK_STORAGE_KEY` | Override the default per-machine key derivation for AES-256-GCM at-rest encryption (DB fields, wallet private key). |
+
+If the agent crashes, a sanitized snapshot is appended to `~/.grok/crash.log`
+(mode 0600). The path is also printed by the panic handler. Secrets
+(`GROK_API_KEY`, `TELEGRAM_BOT_TOKEN`, `sk-*`/`xai-*`/`ghp_*`/Telegram
+bot-token shapes) are redacted before write.
+
+### Headless / CI integration
+
+Headless runs (`grok --prompt "..." --format json`) emit one JSON event
+per line. The full schema with all five event types and a jq cookbook
+lives in [`docs/HEADLESS_JSON_SPEC.md`](docs/HEADLESS_JSON_SPEC.md). Exit
+codes are differentiated:
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | User error (bad flag, missing API key) |
+| 2 | Transient (network, rate-limit) |
+| 3 | Agent / tool execution error |
+| 4 | Internal panic |
+
+---
+
+## Built with
+
+The interactive console is built with **[React Ink](https://github.com/vadimdemedes/ink)**
+(Vadim Demedes' React renderer for terminal UIs) on the **[Bun](https://bun.sh/)**
+runtime. Markdown rendering uses **[marked](https://github.com/markedjs/marked)**
++ **[marked-terminal](https://github.com/mikaelbr/marked-terminal)** with
+**[chalk](https://github.com/chalk/chalk)** for ANSI colors. The agent
+loop talks to the xAI API via **[Vercel AI SDK](https://github.com/vercel/ai)**.
+Schema validation uses **[zod](https://github.com/colinhacks/zod)**.
+Telegram integration uses **[grammY](https://grammy.dev/)**. Local tests
+run on **[Vitest](https://vitest.dev/)**; lint and format with
+**[Biome](https://biomejs.dev/)**.
 
 ---
 

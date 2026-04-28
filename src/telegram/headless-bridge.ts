@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import process from "node:process";
 import { Agent } from "../agent/agent";
+import { debugLogger } from "../utils/debug-log";
 import {
   getApiKey,
   getBaseURL,
@@ -97,7 +98,7 @@ function buildTelegramAgentFactory(startupConfig: TelegramHeadlessStartupConfig)
     }
 
     // Connect MCP servers (session-scoped, non-blocking)
-    agent.connectMcp().catch(() => {});
+    agent.connectMcp().catch(debugLogger("telegram/headless-bridge"));
 
     agents.set(userId, agent);
     return agent;

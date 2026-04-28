@@ -3,6 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { executeEventHooks } from "../hooks/index";
 import type { InstructionsLoadedHookInput } from "../hooks/types";
+import { debugLogger } from "./debug-log";
 import { findGitRoot } from "./git-root";
 
 const instructionsHookFiredFor = new Set<string>();
@@ -73,7 +74,7 @@ export function loadCustomInstructions(cwd: string): string | null {
       files_loaded: parts.length,
       cwd: canonical,
     };
-    executeEventHooks(hookInput, canonical).catch(() => {});
+    executeEventHooks(hookInput, canonical).catch(debugLogger("utils/instructions"));
   }
 
   return parts.join("\n\n");

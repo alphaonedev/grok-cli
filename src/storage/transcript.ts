@@ -84,8 +84,8 @@ function buildEffectiveMessageRecords(sessionId: string): EffectiveMessageRecord
 
   return transcript.messages.map((message, index) => ({
     message,
-    seq: transcript.seqs[index],
-    timestamp: transcript.timestamps[index],
+    seq: transcript.seqs[index] ?? null,
+    timestamp: transcript.timestamps[index] ?? new Date(),
   }));
 }
 

@@ -274,7 +274,7 @@ function randomId(): string {
 }
 
 function pick(values: readonly string[]): string {
-  return values[Math.floor(Math.random() * values.length)];
+  return values[Math.floor(Math.random() * values.length)] ?? "";
 }
 
 function resolveCliArgs(): string[] {

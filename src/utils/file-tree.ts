@@ -2,7 +2,7 @@
  * File tree visualization — unicode box-drawing directory view.
  *
  * Renders directory listings as readable tree structures for both
- * interactive (OpenTUI) and headless (ANSI) output.
+ * interactive (Ink) and headless (ANSI) output.
  *
  * Copyright (c) 2026 AlphaOne LLC. MIT License.
  */

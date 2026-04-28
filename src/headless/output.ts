@@ -1,6 +1,9 @@
 import type { ProcessMessageObserver, ProcessMessageStepFinish, ProcessMessageStepStart } from "../agent/agent";
 import type { StreamChunk, ToolCall, ToolResult } from "../types";
+import { debugLogger } from "../utils/debug-log";
 import { containsMarkdown, renderMarkdown } from "../utils/terminal-markdown";
+
+const debug = debugLogger("headless/output");
 
 export type HeadlessOutputFormat = "text" | "json";
 
@@ -159,7 +162,9 @@ function formatToolCallLabel(tc: ToolCall): string {
     if ((name === "write_file" || name === "edit_file") && typeof args.path === "string") {
       return `${name === "write_file" ? "write" : "edit"}: ${args.path}`;
     }
-  } catch {}
+  } catch (err) {
+    debug(err);
+  }
   return name;
 }
 

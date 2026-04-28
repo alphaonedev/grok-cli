@@ -19,10 +19,10 @@ Grok CLI (`@vibe-kit/grok-cli`) is a single-package TypeScript CLI tool — no d
 | CLI help      | `node dist/index.js --help`                                           |
 
 
-### Known issues
+### Linting
 
-- **ESLint config is broken**: The repo has `.eslintrc.js` (legacy format) but uses ESLint 9 (`^9.31.0`) + `@typescript-eslint` v8, which require flat config (`eslint.config.js`). Additionally, `.eslintrc.js` uses `module.exports` (CJS) but `package.json` has `"type": "module"` (ESM). Running `bun run lint` will fail. Use `bun run typecheck` as the primary code quality check (this is also what CI enforces).
-- **Dev mode (`bun run dev` / `bun run dev:node`) fails at runtime**: `src/utils/model-config.ts` imports TypeScript interfaces (`UserSettings`, `ProjectSettings`) as value imports from `settings-manager.ts`. These type-only exports are erased at runtime by Bun and tsx, causing `SyntaxError: export '...' not found`. The fix is to use `import type` syntax, but this is a pre-existing repo issue. **Workaround**: build first (`bun run build`), then run the compiled version (`node dist/index.js`).
+Biome is the only linter (`bun run lint` → `biome check src/`). There is no
+ESLint config; `bun run typecheck` and `bun run lint` both run in CI.
 
 ### Environment
 

@@ -1,6 +1,5 @@
 /**
- * Ink-based interactive UI for grok-cli.
- * Replaces OpenTUI's app.tsx with a simpler, markdown-capable UI.
+ * React Ink interactive UI for grok-cli.
  */
 
 import { Box, Static, Text, useApp, useInput, useStdout } from "ink";
@@ -62,6 +61,7 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
 
       let accumulated = "";
       const tools: Array<{ call: ToolCall; result?: ToolResult }> = [];
+      const toolsByCallId = new Map<string, { call: ToolCall; result?: ToolResult }>();
 
       try {
         for await (const chunk of agent.processMessage(text) as AsyncIterable<StreamChunk>) {
@@ -75,18 +75,22 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
             case "tool_calls":
               if (chunk.toolCalls) {
                 for (const tc of chunk.toolCalls) {
-                  tools.push({ call: tc });
+                  const entry = { call: tc };
+                  tools.push(entry);
+                  toolsByCallId.set(tc.id, entry);
                 }
                 setActiveTools([...tools]);
               }
               break;
             case "tool_result":
               if (chunk.toolCall && chunk.toolResult) {
-                const existing = tools.find((t) => t.call.id === chunk.toolCall?.id);
+                const existing = toolsByCallId.get(chunk.toolCall.id);
                 if (existing) {
                   existing.result = chunk.toolResult;
                 } else {
-                  tools.push({ call: chunk.toolCall, result: chunk.toolResult });
+                  const entry = { call: chunk.toolCall, result: chunk.toolResult };
+                  tools.push(entry);
+                  toolsByCallId.set(chunk.toolCall.id, entry);
                 }
                 setActiveTools([...tools]);
               }
@@ -222,7 +226,7 @@ export function App({ agent, initialMessage }: { agent: Agent; initialMessage?: 
             Agent
           </Text>
           <Box marginLeft={2}>
-            <MarkdownView content={streamContent} />
+            <MarkdownView content={streamContent} streaming />
           </Box>
         </Box>
       )}

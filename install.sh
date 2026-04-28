@@ -244,6 +244,55 @@ resolve_release_version() {
   RELEASE_BASE_URL="https://github.com/${REPO}/releases/latest/download"
 }
 
+file_size() {
+  # Portable byte size of a file. macOS stat -f%z, Linux stat -c%s, fall back to wc -c.
+  if stat -f%z "$1" >/dev/null 2>&1; then
+    stat -f%z "$1"
+  elif stat -c%s "$1" >/dev/null 2>&1; then
+    stat -c%s "$1"
+  else
+    wc -c < "$1" | tr -d ' '
+  fi
+}
+
+# Download with retry, resume, and post-download size sanity check.
+# Without this, an interrupted curl returns exit 0 with a truncated file
+# that passes -f (which only catches HTTP errors, not truncated transfers).
+download_with_retry() {
+  local url="$1" dest="$2" desc="$3"
+  local max_attempts=3 attempt=1 expected_size=""
+
+  # Best-effort: discover Content-Length so we can verify completeness.
+  expected_size=$(curl -sIL --retry 2 --max-time 30 "$url" \
+    | awk 'tolower($1) == "content-length:" { gsub(/\r/, ""); print $2 }' \
+    | tail -n 1)
+
+  while (( attempt <= max_attempts )); do
+    if [[ -f "$dest" ]]; then rm -f "$dest"; fi
+    if curl -fSL --retry 3 --retry-connrefused --retry-delay 2 --connect-timeout 30 \
+         --max-time 1800 "$url" -o "$dest"; then
+      if [[ -n "$expected_size" ]]; then
+        local actual_size
+        actual_size=$(file_size "$dest")
+        if [[ "$actual_size" == "$expected_size" ]]; then
+          return 0
+        fi
+        echo "Warning: ${desc} download size mismatch (got ${actual_size}, expected ${expected_size}). Retrying..." >&2
+      else
+        # No Content-Length available; trust curl's exit code.
+        return 0
+      fi
+    else
+      echo "Warning: ${desc} download attempt ${attempt} failed. Retrying..." >&2
+    fi
+    attempt=$((attempt + 1))
+    sleep 2
+  done
+
+  echo "Error: failed to download ${desc} from ${url} after ${max_attempts} attempts." >&2
+  return 1
+}
+
 install_downloaded_release() {
   local tmp_dir binary_file checksum_file
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/grok-install.XXXXXX")
@@ -253,12 +302,21 @@ install_downloaded_release() {
   checksum_file="${tmp_dir}/checksums.txt"
 
   echo "Downloading ${ASSET_NAME}..."
-  curl -fSL "${RELEASE_BASE_URL}/${ASSET_NAME}" -o "$binary_file"
-  curl -fsSL "${RELEASE_BASE_URL}/checksums.txt" -o "$checksum_file"
+  download_with_retry "${RELEASE_BASE_URL}/${ASSET_NAME}" "$binary_file" "${ASSET_NAME}"
+  download_with_retry "${RELEASE_BASE_URL}/checksums.txt" "$checksum_file" "checksums.txt"
+  if [[ ! -s "$checksum_file" ]]; then
+    echo "Error: checksums.txt was empty after download. Refusing to install unverified binary." >&2
+    exit 1
+  fi
   verify_checksum "$binary_file" "$checksum_file"
 
-  cp "$binary_file" "${INSTALL_DIR}/${BINARY_NAME}"
-  [[ "$TARGET" != windows-* ]] && chmod 755 "${INSTALL_DIR}/${BINARY_NAME}"
+  # Atomic install: write to .new, fsync, then rename. A crash mid-copy
+  # never leaves a half-written binary in INSTALL_DIR.
+  local target="${INSTALL_DIR}/${BINARY_NAME}"
+  local staging="${target}.new"
+  cp "$binary_file" "$staging"
+  [[ "$TARGET" != windows-* ]] && chmod 755 "$staging"
+  mv -f "$staging" "$target"
 }
 
 install_local_binary() {

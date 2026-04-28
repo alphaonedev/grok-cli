@@ -14,13 +14,13 @@ describe("task-tracker", () => {
   it("updates task status", () => {
     const task = createTask("Test");
     updateTask(task.id, "in_progress");
-    expect(getTasks()[0].status).toBe("in_progress");
+    expect(getTasks()[0]!.status).toBe("in_progress");
   });
 
   it("completes a task", () => {
     const task = createTask("Ship it");
     updateTask(task.id, "completed");
-    expect(getTasks()[0].status).toBe("completed");
+    expect(getTasks()[0]!.status).toBe("completed");
   });
 
   it("bulk sets tasks", () => {
@@ -30,8 +30,8 @@ describe("task-tracker", () => {
       { content: "C", status: "pending" },
     ]);
     expect(getTasks()).toHaveLength(3);
-    expect(getTasks()[0].status).toBe("completed");
-    expect(getTasks()[1].status).toBe("in_progress");
+    expect(getTasks()[0]!.status).toBe("completed");
+    expect(getTasks()[1]!.status).toBe("in_progress");
   });
 
   it("clears all tasks", () => {
@@ -51,7 +51,7 @@ describe("task-tracker", () => {
 
   it("renders TOON output", () => {
     createTask("Build");
-    updateTask(getTasks()[0].id, "completed");
+    updateTask(getTasks()[0]!.id, "completed");
     const toon = renderTasksToon();
     expect(toon).toContain("tasks[1]");
     expect(toon).toContain("completed|Build");

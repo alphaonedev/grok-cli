@@ -54,7 +54,7 @@ export function jsonToToon(obj: ToonValue, indent = 0): string {
         const header = `[${obj.length}]{${keys.join(",")}}:`;
         const rows = obj.map((item) => {
           const record = item as Record<string, ToonValue>;
-          return `${prefix}  ${keys.map((k) => jsonToToon(record[k])).join(",")}`;
+          return `${prefix}  ${keys.map((k) => jsonToToon(record[k] ?? null)).join(",")}`;
         });
         return `${header}\n${rows.join("\n")}`;
       }
