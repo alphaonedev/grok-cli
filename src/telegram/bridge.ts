@@ -30,9 +30,54 @@ export interface TelegramBridgeHandle {
   sendDm: (userId: number, text: string) => Promise<void>;
 }
 
+/**
+ * Per-user sliding-window rate limit. Bounds API spend if a bot token
+ * leaks or an approved Telegram user goes rogue. Tunable via
+ * GROK_TELEGRAM_RATE_LIMIT_MAX (default 10) and
+ * GROK_TELEGRAM_RATE_LIMIT_WINDOW_MS (default 60_000).
+ */
+const TELEGRAM_RATE_LIMIT_MAX = (() => {
+  const parsed = Number.parseInt(process.env.GROK_TELEGRAM_RATE_LIMIT_MAX ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 10;
+})();
+const TELEGRAM_RATE_LIMIT_WINDOW_MS = (() => {
+  const parsed = Number.parseInt(process.env.GROK_TELEGRAM_RATE_LIMIT_WINDOW_MS ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 60_000;
+})();
+
+interface RateLimitState {
+  /** Monotonic timestamps (ms) of recent allowed messages. */
+  recent: number[];
+  /** When this user is paused, the resume time (ms epoch). 0 if not paused. */
+  pausedUntil: number;
+}
+
 export function createTelegramBridge(opts: TelegramBridgeOptions): TelegramBridgeHandle {
   const bot = new Bot(opts.token);
   let running = false;
+
+  const rateLimitState = new Map<number, RateLimitState>();
+
+  const checkRateLimit = (userId: number): { allowed: boolean; retryAfterMs: number } => {
+    const now = Date.now();
+    let state = rateLimitState.get(userId);
+    if (!state) {
+      state = { recent: [], pausedUntil: 0 };
+      rateLimitState.set(userId, state);
+    }
+    if (state.pausedUntil > now) {
+      return { allowed: false, retryAfterMs: state.pausedUntil - now };
+    }
+    // Drop timestamps outside the window.
+    const cutoff = now - TELEGRAM_RATE_LIMIT_WINDOW_MS;
+    state.recent = state.recent.filter((t) => t > cutoff);
+    if (state.recent.length >= TELEGRAM_RATE_LIMIT_MAX) {
+      state.pausedUntil = now + TELEGRAM_RATE_LIMIT_WINDOW_MS;
+      return { allowed: false, retryAfterMs: TELEGRAM_RATE_LIMIT_WINDOW_MS };
+    }
+    state.recent.push(now);
+    return { allowed: true, retryAfterMs: 0 };
+  };
 
   const buildTurnKey = (ctx: { chat: { id: number }; message: { message_id: number } }) =>
     `telegram:${ctx.chat.id}:${ctx.message.message_id}`;
@@ -44,6 +89,15 @@ export function createTelegramBridge(opts: TelegramBridgeOptions): TelegramBridg
     const approved = opts.getApprovedUserIds();
     if (!approved.includes(userId)) {
       await ctx.reply("Not paired yet. Send /pair to get a code, then approve in Grok CLI.");
+      return null;
+    }
+
+    const limit = checkRateLimit(userId);
+    if (!limit.allowed) {
+      const seconds = Math.ceil(limit.retryAfterMs / 1000);
+      await ctx.reply(
+        `Rate limit reached (${TELEGRAM_RATE_LIMIT_MAX}/${Math.round(TELEGRAM_RATE_LIMIT_WINDOW_MS / 1000)}s). Try again in ~${seconds}s.`,
+      );
       return null;
     }
 

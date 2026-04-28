@@ -249,7 +249,26 @@ function resolveConfig(options: CliOptions) {
   if (typeof options.apiKey === "string") saveUserSettings({ apiKey: options.apiKey });
   if (typeof options.model === "string") saveUserSettings({ defaultModel: normalizeModelId(options.model) });
 
+  warnIfSandboxOff(sandboxMode);
+
   return { apiKey, baseURL, model, maxToolRounds, sandboxMode, sandboxSettings };
+}
+
+/**
+ * Print a one-line warning to stderr when the agent is about to run
+ * shell commands directly on the host (no Shuru sandbox). Suppressible
+ * via GROK_SUPPRESS_SANDBOX_WARNING=1 for users who have made an
+ * informed choice.
+ */
+function warnIfSandboxOff(sandboxMode: SandboxMode): void {
+  if (sandboxMode !== "off") return;
+  if (process.env.GROK_SUPPRESS_SANDBOX_WARNING === "1") return;
+  if (!process.stderr.isTTY) return;
+  process.stderr.write(
+    "[33m! Sandbox is OFF. Shell commands run directly on your host.\n" +
+      "  Use --sandbox for Shuru-isolated execution. Set\n" +
+      "  GROK_SUPPRESS_SANDBOX_WARNING=1 to silence this warning.[0m\n",
+  );
 }
 
 function requireApiKey(apiKey: string | undefined): string {

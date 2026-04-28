@@ -45,6 +45,70 @@ jobs:
       - name: Compile standalone binary
         run: bun build --compile --outfile "release/${{ matrix.build_output }}" ./src/index.ts
 
+      # macOS code signing + notarization (optional). Requires the
+      # following GitHub Actions secrets to be set on the repository:
+      #   APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64
+      #     base64-encoded .p12 of "Developer ID Application: <name>" cert
+      #   APPLE_DEVELOPER_ID_APPLICATION_CERT_PASSWORD
+      #     password used when exporting the .p12
+      #   APPLE_ID            — Apple ID email
+      #   APPLE_APP_SPECIFIC_PASSWORD  — app-specific pwd for notarytool
+      #   APPLE_TEAM_ID       — 10-char Team ID
+      # Without these the step is skipped and the binary ships ad-hoc
+      # signed (which still satisfies the macOS arm64 SIGKILL-on-launch
+      # check, but Gatekeeper will warn on first run from outside the
+      # Mac App Store).
+      - name: Codesign + notarize (macOS)
+        if: runner.os == 'macOS' && env.APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64 != ''
+        env:
+          APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64 }}
+          APPLE_DEVELOPER_ID_APPLICATION_CERT_PASSWORD: ${{ secrets.APPLE_DEVELOPER_ID_APPLICATION_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          echo "$APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" \
+            -P "$APPLE_DEVELOPER_ID_APPLICATION_CERT_PASSWORD" \
+            -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH" >/dev/null
+
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" \
+            | awk -F\" '/Developer ID Application/ { print $2; exit }')
+          if [[ -z "$IDENTITY" ]]; then
+            echo "::error::Could not locate Developer ID Application identity in keychain."
+            exit 1
+          fi
+
+          codesign --force --options runtime --timestamp \
+            --sign "$IDENTITY" \
+            "release/${{ matrix.build_output }}"
+
+          # Notarize. Bun-compiled binaries must be inside a .zip for notarytool.
+          ditto -c -k --keepParent "release/${{ matrix.build_output }}" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          # Standalone binaries (not .app bundles) cannot be stapled,
+          # but the notary record is cached by Apple's CDN and Gatekeeper
+          # will look it up online on first launch.
+
+          # Cleanup
+          security delete-keychain "$KEYCHAIN_PATH"
+          rm -f "$RUNNER_TEMP/cert.p12" "$RUNNER_TEMP/notarize.zip"
+
       - name: Compute checksum (unix)
         if: runner.os != 'Windows'
         shell: bash
