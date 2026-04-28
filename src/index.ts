@@ -253,7 +253,7 @@ function parseHeadlessOutputFormat(value: string): HeadlessOutputFormat {
 
 program
   .name("grok")
-  .description("AI coding agent powered by Grok — built with Bun and OpenTUI")
+  .description("AI coding agent powered by Grok — built with Bun and React Ink")
   .version(packageJson.version)
   .argument("[message...]", "Initial message to send")
   .option("-k, --api-key <key>", "Grok API key")

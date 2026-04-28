@@ -1,6 +1,5 @@
 /**
- * Ink-based interactive UI for grok-cli.
- * Replaces OpenTUI's app.tsx with a simpler, markdown-capable UI.
+ * React Ink interactive UI for grok-cli.
  */
 
 import { Box, Static, Text, useApp, useInput, useStdout } from "ink";
