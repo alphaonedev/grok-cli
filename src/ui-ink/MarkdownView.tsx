@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { Text } from "ink";
 import { Marked } from "marked";
 import { markedTerminal } from "marked-terminal";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // Only syntax highlighting colors — no structural overrides
 const md = new Marked(
@@ -48,15 +48,52 @@ const md = new Marked(
   ),
 );
 
-export function MarkdownView({ content }: { content: string }) {
-  const rendered = useMemo(() => {
-    if (!content) return "";
-    try {
-      return md.parse(content) as string;
-    } catch {
-      return content;
-    }
-  }, [content]);
+function parse(content: string): string {
+  if (!content) return "";
+  try {
+    return md.parse(content) as string;
+  } catch {
+    return content;
+  }
+}
 
-  return <Text>{rendered}</Text>;
+interface MarkdownViewProps {
+  content: string;
+  /**
+   * When true, debounce parses while content is rapidly changing (streaming).
+   * Avoids re-parsing the entire accumulated buffer on every token (~50/sec).
+   */
+  streaming?: boolean;
+}
+
+const STREAM_DEBOUNCE_MS = 120;
+
+export function MarkdownView({ content, streaming = false }: MarkdownViewProps) {
+  // Static path: parse on every render (cheap because parent caller — `Static`
+  // in Ink — only re-renders when the message list mutates).
+  const staticRendered = useMemo(() => (streaming ? "" : parse(content)), [content, streaming]);
+
+  // Streaming path: throttle parses to STREAM_DEBOUNCE_MS, falling back to
+  // the most recent parse while the next is pending.
+  const [debouncedRendered, setDebouncedRendered] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!streaming) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setDebouncedRendered(parse(content));
+      timerRef.current = null;
+    }, STREAM_DEBOUNCE_MS);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [content, streaming]);
+
+  if (streaming) {
+    // Show last successful parse, or raw text until the first parse completes
+    return <Text>{debouncedRendered || content}</Text>;
+  }
+
+  return <Text>{staticRendered}</Text>;
 }
