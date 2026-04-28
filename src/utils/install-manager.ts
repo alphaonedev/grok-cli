@@ -336,16 +336,59 @@ function normalizeReleaseVersion(tagName: string): string | null {
   return semverValid(version);
 }
 
+/**
+ * Download a binary release asset with size verification, retry, and
+ * atomic on-disk write. Without these, a network blip can leave a
+ * truncated binary on disk that passes the HTTP success check but
+ * fails Mach-O / ELF validation at run time.
+ */
 async function downloadBinary(url: string, dest: string): Promise<void> {
-  const res = await fetch(url, { headers: { Accept: "application/octet-stream" } });
-  if (!res.ok) throw new Error(`Download failed (${res.status}) for ${url}`);
-  fs.writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
+  const maxAttempts = 3;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { Accept: "application/octet-stream" } });
+      if (!res.ok) throw new Error(`Download failed (${res.status}) for ${url}`);
+
+      const contentLengthHeader = res.headers.get("content-length");
+      const expectedSize = contentLengthHeader ? Number.parseInt(contentLengthHeader, 10) : null;
+
+      // Stream to a staging file then rename, so an aborted write
+      // never leaves a half-written file at `dest`.
+      const staging = `${dest}.part`;
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (Number.isFinite(expectedSize) && expectedSize !== null && buf.length !== expectedSize) {
+        throw new Error(`Download size mismatch for ${url}: got ${buf.length} bytes, expected ${expectedSize}.`);
+      }
+      fs.writeFileSync(staging, buf);
+      fs.renameSync(staging, dest);
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+      }
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
 
 async function downloadText(url: string): Promise<string> {
-  const res = await fetch(url, { headers: { Accept: "text/plain" } });
-  if (!res.ok) throw new Error(`Download failed (${res.status}) for ${url}`);
-  return await res.text();
+  const maxAttempts = 3;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { Accept: "text/plain" } });
+      if (!res.ok) throw new Error(`Download failed (${res.status}) for ${url}`);
+      return await res.text();
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+      }
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
 
 function sha256File(filePath: string): string {
