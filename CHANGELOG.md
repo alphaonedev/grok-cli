@@ -7,10 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.7.0] - 2026-04-28
+> **Note on releases:** v1.7.0 was tagged on 2026-04-28 and immediately
+> yanked because the binaries were unsigned. The previous v1.6.0
+> binaries were yanked at the same time for the same reason. The
+> next published release will be the first to carry signed +
+> notarized macOS binaries (see [docs/RELEASE_SIGNING.md](docs/RELEASE_SIGNING.md)
+> for the GitHub Actions secrets that need to be configured).
+> Code on `main` reflects the v1.7.0 work and is the basis of the
+> upcoming re-cut.
+
+## [1.7.0] - 2026-04-28 (yanked — unsigned binaries)
 
 Full-spectrum security, performance, release-engineering, and DX hardening
 based on a six-agent code review of the entire codebase.
+
+> **Yanked.** The binaries published with this tag were unsigned and
+> were removed from the GitHub Releases page on 2026-04-28. The code
+> changes themselves are merged on `main` and will ship in the next
+> properly-signed release using the same version number.
 
 ### Security
 - **Wallet private keys are now AES-256-GCM encrypted at rest.** Previously
