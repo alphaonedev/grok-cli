@@ -2,6 +2,7 @@ import Arborist from "@npmcli/arborist";
 import { access, mkdir, readdir, readFile, rm } from "fs/promises";
 import os from "os";
 import path from "path";
+import { debugLogger } from "../utils/debug-log";
 
 const CACHE_ROOT = path.join(os.homedir(), ".grok", "cache", "lsp");
 const locks = new Map<string, Promise<unknown>>();
@@ -94,7 +95,7 @@ async function readJsonSafe<T>(filePath: string): Promise<T | undefined> {
 async function withPackageLock<T>(pkg: string, fn: () => Promise<T>): Promise<T> {
   const key = `lsp-install:${pkg}`;
   while (locks.has(key)) {
-    await locks.get(key)!.catch(() => {});
+    await locks.get(key)!.catch(debugLogger("lsp/npm-cache"));
   }
   const task = fn();
   locks.set(key, task);

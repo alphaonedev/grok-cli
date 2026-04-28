@@ -1,6 +1,7 @@
 import { createMCPClient, type MCPClient } from "@ai-sdk/mcp";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { ToolSet } from "ai";
+import { debugLogger } from "../utils/debug-log";
 import type { McpServerConfig } from "../utils/settings";
 import { validateMcpServerConfig } from "./validate";
 
@@ -136,7 +137,7 @@ export async function buildMcpToolSet(servers: McpServerConfig[]): Promise<McpTo
     tools,
     errors,
     async close() {
-      await Promise.all(clients.map((client) => client.close().catch(() => {})));
+      await Promise.all(clients.map((client) => client.close().catch(debugLogger("mcp/runtime"))));
     },
   };
 }

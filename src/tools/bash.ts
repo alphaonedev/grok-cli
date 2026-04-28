@@ -6,6 +6,7 @@ import path from "path";
 import { executeEventHooks } from "../hooks/index";
 import type { CwdChangedHookInput } from "../hooks/types";
 import type { ToolResult } from "../types/index";
+import { debugLogger } from "../utils/debug-log";
 import type { SandboxMode, SandboxSettings } from "../utils/settings";
 
 const MAX_TAIL_BYTES = 8_192;
@@ -72,7 +73,7 @@ export class BashTool {
             new_cwd: nextCwd,
             cwd: nextCwd,
           };
-          executeEventHooks(cwdInput, nextCwd).catch(() => {});
+          executeEventHooks(cwdInput, nextCwd).catch(debugLogger("tools/bash"));
 
           return { success: true, output: `Changed directory to: ${this.cwd}` };
         } catch (err: unknown) {

@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import type { VerifyRecipe } from "../types/index";
+import { debugLogger } from "../utils/debug-log";
 import type { SandboxSettings } from "../utils/settings";
 import type { VerifyProjectProfile } from "./recipes";
 
@@ -228,7 +229,7 @@ export async function ensureVerifyCheckpoint(
     try {
       await spawnWithProgress("shuru", args, cwd, onProgress);
     } catch (error) {
-      await deleteCheckpoint(cwd, checkpointName).catch(() => {});
+      await deleteCheckpoint(cwd, checkpointName).catch(debugLogger("verify/checkpoint"));
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`Verify checkpoint bootstrap failed for "${checkpointName}": ${message}`);
     }

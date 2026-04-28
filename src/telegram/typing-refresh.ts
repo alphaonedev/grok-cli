@@ -1,4 +1,5 @@
 import type { Api } from "grammy";
+import { debugLogger } from "../utils/debug-log";
 
 /** Telegram clears typing after ~5s; refresh before that so the indicator stays visible. */
 const TYPING_REFRESH_MS = 3500;
@@ -11,7 +12,10 @@ export function startTypingRefresh(
   enabled: boolean,
 ): () => void {
   if (!enabled) return () => {};
-  const tick = () => void api.sendChatAction(chatId, "typing", { message_thread_id: messageThreadId }).catch(() => {});
+  const tick = () =>
+    void api
+      .sendChatAction(chatId, "typing", { message_thread_id: messageThreadId })
+      .catch(debugLogger("telegram/typing-refresh"));
   tick();
   const id = setInterval(tick, TYPING_REFRESH_MS);
   return () => clearInterval(id);

@@ -64,6 +64,7 @@ import type {
   VerifyRecipe,
   WorkspaceInfo,
 } from "../types/index";
+import { debugLogger } from "../utils/debug-log";
 import { loadCustomInstructions } from "../utils/instructions";
 import {
   type CustomSubagentConfig,
@@ -664,7 +665,7 @@ export class Agent {
    */
   async disconnectMcp(): Promise<void> {
     if (this.mcpBundle) {
-      await this.mcpBundle.close().catch(() => {});
+      await this.mcpBundle.close().catch(debugLogger("agent"));
       this.mcpBundle = null;
     }
   }
@@ -846,7 +847,7 @@ export class Agent {
         session_id: this.session?.id,
         cwd: this.bash.getCwd(),
       };
-      this.fireHook(endInput).catch(() => {});
+      this.fireHook(endInput).catch(debugLogger("agent"));
       this.sessionStartHookFired = false;
     }
 
@@ -941,7 +942,7 @@ export class Agent {
           session_id: this.session?.id,
           cwd: this.bash.getCwd(),
         };
-        this.fireHook(notifInput).catch(() => {});
+        this.fireHook(notifInput).catch(debugLogger("agent"));
       }
       return notifications.map((notification) => notification.message);
     } catch {
@@ -1392,7 +1393,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(startInput, abortSignal).catch(() => {});
+    await this.fireHook(startInput, abortSignal).catch(debugLogger("agent"));
 
     let result: ToolResult;
     try {
@@ -1420,7 +1421,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(stopInput, abortSignal).catch(() => {});
+    await this.fireHook(stopInput, abortSignal).catch(debugLogger("agent"));
 
     return result;
   }
@@ -1433,7 +1434,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(taskCreatedInput, abortSignal).catch(() => {});
+    await this.fireHook(taskCreatedInput, abortSignal).catch(debugLogger("agent"));
 
     let result: ToolResult;
     try {
@@ -1466,7 +1467,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(taskCompletedInput, abortSignal).catch(() => {});
+    await this.fireHook(taskCompletedInput, abortSignal).catch(debugLogger("agent"));
 
     return result;
   }
@@ -1544,7 +1545,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(preCompactInput, signal).catch(() => {});
+    await this.fireHook(preCompactInput, signal).catch(debugLogger("agent"));
 
     const keptSeqs = this.messageSeqs.slice(preparation.firstKeptIndex);
     const firstKeptSeq = keptSeqs.find((seq): seq is number => seq !== null) ?? getNextMessageSequence(this.session.id);
@@ -1560,12 +1561,12 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(postCompactInput, signal).catch(() => {});
+    await this.fireHook(postCompactInput, signal).catch(debugLogger("agent"));
 
     // Store compaction summary as memory (if ai-memory is connected)
     const mcpTools = this.getMcpTools();
     if (hasAiMemory(mcpTools)) {
-      storeCompactionSummary(mcpTools, summary, this.bash.getCwd(), this.session?.id).catch(() => {});
+      storeCompactionSummary(mcpTools, summary, this.bash.getCwd(), this.session?.id).catch(debugLogger("agent"));
     }
 
     return true;
@@ -1834,7 +1835,7 @@ export class Agent {
         session_id: this.session?.id,
         cwd: this.bash.getCwd(),
       };
-      await this.fireHook(sessionStartInput, signal).catch(() => {});
+      await this.fireHook(sessionStartInput, signal).catch(debugLogger("agent"));
     }
 
     const promptInput: UserPromptSubmitHookInput = {
@@ -1843,7 +1844,7 @@ export class Agent {
       session_id: this.session?.id,
       cwd: this.bash.getCwd(),
     };
-    await this.fireHook(promptInput, signal).catch(() => {});
+    await this.fireHook(promptInput, signal).catch(debugLogger("agent"));
 
     await this.consumeBackgroundNotifications();
     const userModelMessage: ModelMessage = { role: "user", content: userMessage };
@@ -2149,7 +2150,7 @@ export class Agent {
             session_id: this.session?.id,
             cwd: this.bash.getCwd(),
           };
-          await this.fireHook(stopInput, signal).catch(() => {});
+          await this.fireHook(stopInput, signal).catch(debugLogger("agent"));
 
           yield { type: "done" };
           return;
@@ -2187,7 +2188,7 @@ export class Agent {
             session_id: this.session?.id,
             cwd: this.bash.getCwd(),
           };
-          await this.fireHook(stopFailureInput, signal).catch(() => {});
+          await this.fireHook(stopFailureInput, signal).catch(debugLogger("agent"));
 
           yield { type: "done" };
           return;
