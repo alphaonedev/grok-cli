@@ -112,10 +112,17 @@ footer a { color: var(--muted); }
     </div>
     <div class="install-box">
       <div class="install-header">
-        <h3>Install</h3>
-        <button class="copy-btn" id="copy-btn" onclick="copyInstall()" title="Copy to clipboard">Copy</button>
+        <h3>Install (Homebrew)</h3>
+        <button class="copy-btn" id="copy-btn-brew" onclick="copyInstall('install-cmd-brew', 'copy-btn-brew')" title="Copy to clipboard">Copy</button>
       </div>
-      <code id="install-cmd" onclick="copyInstall()">curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash</code>
+      <code id="install-cmd-brew" onclick="copyInstall('install-cmd-brew', 'copy-btn-brew')">brew tap alphaonedev/homebrew-tap &amp;&amp; brew install grok-cli</code>
+    </div>
+    <div class="install-box" style="margin-top:12px;">
+      <div class="install-header">
+        <h3>Install (curl)</h3>
+        <button class="copy-btn" id="copy-btn" onclick="copyInstall('install-cmd', 'copy-btn')" title="Copy to clipboard">Copy</button>
+      </div>
+      <code id="install-cmd" onclick="copyInstall('install-cmd', 'copy-btn')">curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash</code>
     </div>
   </div>
 </header>
@@ -378,16 +385,19 @@ footer a { color: var(--muted); }
 </footer>
 
 <script>
-function copyInstall() {
-  var text = document.getElementById('install-cmd').textContent;
-  var btn = document.getElementById('copy-btn');
+function copyInstall(codeId, btnId) {
+  codeId = codeId || 'install-cmd';
+  btnId = btnId || 'copy-btn';
+  var codeEl = document.getElementById(codeId);
+  var btn = document.getElementById(btnId);
+  var text = codeEl.textContent;
   navigator.clipboard.writeText(text).then(function() {
     btn.textContent = 'Copied!';
     btn.classList.add('copied');
     setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   }).catch(function() {
     var r = document.createRange();
-    r.selectNodeContents(document.getElementById('install-cmd'));
+    r.selectNodeContents(codeEl);
     var s = window.getSelection();
     s.removeAllRanges();
     s.addRange(r);
