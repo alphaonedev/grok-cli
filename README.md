@@ -28,7 +28,18 @@ Community-built and unofficial. Not affiliated with or endorsed by xAI.
 
 ## Install
 
-### One-line install (recommended)
+### Homebrew (macOS arm64 + Linux x64)
+
+```bash
+brew tap alphaonedev/homebrew-tap
+brew install grok-cli
+```
+
+The formula tracks the latest release. Upgrade with `brew upgrade grok-cli`.
+The macOS binary is ad-hoc signed; brew strips the Gatekeeper quarantine
+attribute automatically. Apple Developer ID notarization is on the roadmap.
+
+### One-line install (recommended for non-brew users)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/alphaonedev/grok-cli/main/install.sh | bash
