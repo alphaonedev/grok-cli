@@ -1802,7 +1802,7 @@ export class Agent {
 
     const insertedSeqs = appendMessages(this.session.id, [userMessage, ...newMessages]);
     if (userIndex >= 0) {
-      this.messageSeqs[userIndex] = insertedSeqs[0] ?? this.messageSeqs[userIndex];
+      this.messageSeqs[userIndex] = insertedSeqs[0] ?? this.messageSeqs[userIndex] ?? null;
     }
     this.messages.push(...newMessages);
     this.messageSeqs.push(...insertedSeqs.slice(1));
@@ -2756,8 +2756,9 @@ function humanizeApiError(error: unknown): string {
   if (APICallError.isInstance(error)) {
     const detail = extractResponseDetail(error.responseBody);
     if (detail) return detail;
-    if (error.statusCode && STATUS_MESSAGES[error.statusCode]) {
-      return STATUS_MESSAGES[error.statusCode];
+    if (error.statusCode) {
+      const message = STATUS_MESSAGES[error.statusCode];
+      if (message) return message;
     }
   }
 

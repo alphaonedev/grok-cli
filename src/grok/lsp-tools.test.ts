@@ -23,9 +23,9 @@ describe("lsp tool", () => {
     >;
 
     expect(tools).toHaveProperty("lsp");
-    expect(tools.lsp.description).toContain("Language Server Protocol");
+    expect(tools.lsp!.description).toContain("Language Server Protocol");
 
-    const result = await tools.lsp.execute(
+    const result = await tools.lsp!.execute(
       {
         operation: "hover",
         filePath: "src/index.ts",

@@ -152,9 +152,7 @@ export function renderMarkdown(markdown: string): string {
   let inTable = false;
   let tableLines: string[] = [];
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
+  for (const line of lines) {
     // Code block toggle
     if (line.trimStart().startsWith("```")) {
       if (inCodeBlock) {
@@ -237,7 +235,7 @@ export function renderMarkdown(markdown: string): string {
     if (/^\s*\d+\.\s/.test(line)) {
       const match = line.match(/^(\s*)(\d+)\.\s(.*)/);
       if (match) {
-        output.push(`${match[1]}  ${CYAN}${match[2]}.${RESET} ${renderInline(match[3])}`);
+        output.push(`${match[1] ?? ""}  ${CYAN}${match[2] ?? ""}.${RESET} ${renderInline(match[3] ?? "")}`);
         continue;
       }
     }

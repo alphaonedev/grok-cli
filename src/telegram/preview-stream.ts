@@ -196,7 +196,9 @@ export async function runTelegramPartialReply(api: Api, args: TelegramPartialRep
 
     const messageId = previewMessageId;
     try {
-      await withRetry(() => api.editMessageText(chatId, messageId, parts[0], editThreadOpts(messageThreadId) as never));
+      await withRetry(() =>
+        api.editMessageText(chatId, messageId, parts[0] ?? "", editThreadOpts(messageThreadId) as never),
+      );
     } catch (e) {
       if (!isMessageNotModified(e)) {
         await sendParts(parts);

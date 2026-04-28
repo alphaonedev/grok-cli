@@ -87,7 +87,7 @@ describe("schedule daemon tools", () => {
       subagents: [],
     }) as Record<string, { execute: (input: unknown, context?: unknown) => Promise<unknown>; description?: string }>;
 
-    const taskTool = tools.task;
+    const taskTool = tools.task!;
     expect(taskTool.description).toContain("`verify`");
 
     const result = (await taskTool.execute(
@@ -117,7 +117,7 @@ describe("schedule daemon tools", () => {
       subagents: [],
     }) as Record<string, { execute: (input: unknown, context?: unknown) => Promise<unknown>; description?: string }>;
 
-    const taskTool = tools.task;
+    const taskTool = tools.task!;
     expect(taskTool.description).toContain("`verify-detect`");
 
     const result = (await taskTool.execute(
@@ -147,7 +147,7 @@ describe("schedule daemon tools", () => {
       subagents: [],
     }) as Record<string, { execute: (input: unknown, context?: unknown) => Promise<unknown>; description?: string }>;
 
-    const taskTool = tools.task;
+    const taskTool = tools.task!;
     expect(taskTool.description).toContain("`verify-manifest`");
 
     const result = (await taskTool.execute(
@@ -190,7 +190,7 @@ describe("schedule daemon tools", () => {
     expect(tools).toHaveProperty("computer_wait");
     expect(tools).toHaveProperty("computer_get");
 
-    const taskTool = tools.task;
+    const taskTool = tools.task!;
     expect(taskTool.description).toContain("`computer`");
 
     const result = (await taskTool.execute(
@@ -218,7 +218,7 @@ describe("schedule daemon tools", () => {
       getDaemonStatus: async () => ({ running: true, pid: 4321 }),
     });
 
-    const result = (await tools.schedule_daemon_status.execute({}, {})) as { success: boolean; output: string };
+    const result = (await tools.schedule_daemon_status!.execute({}, {})) as { success: boolean; output: string };
 
     expect(result.success).toBe(true);
     expect(result.output).toContain("Daemon status: running");
@@ -230,7 +230,7 @@ describe("schedule daemon tools", () => {
       startDaemon: async () => ({ status: { running: true, pid: 5555 }, pid: 5555, alreadyRunning: false }),
     });
 
-    const result = (await tools.schedule_daemon_start.execute({}, {})) as { success: boolean; output: string };
+    const result = (await tools.schedule_daemon_start!.execute({}, {})) as { success: boolean; output: string };
 
     expect(result.success).toBe(true);
     expect(result.output).toBe("Schedule daemon started (pid 5555).");
@@ -241,7 +241,7 @@ describe("schedule daemon tools", () => {
       startDaemon: async () => ({ status: { running: true, pid: 7777 }, pid: 7777, alreadyRunning: true }),
     });
 
-    const result = (await tools.schedule_daemon_start.execute({}, {})) as { success: boolean; output: string };
+    const result = (await tools.schedule_daemon_start!.execute({}, {})) as { success: boolean; output: string };
 
     expect(result.success).toBe(true);
     expect(result.output).toBe("Schedule daemon already running (pid 7777).");
@@ -252,7 +252,7 @@ describe("schedule daemon tools", () => {
       stopDaemon: async () => ({ status: { running: false, pid: null }, pid: 8888, wasRunning: true }),
     });
 
-    const result = (await tools.schedule_daemon_stop.execute({}, {})) as { success: boolean; output: string };
+    const result = (await tools.schedule_daemon_stop!.execute({}, {})) as { success: boolean; output: string };
 
     expect(result.success).toBe(true);
     expect(result.output).toBe("Schedule daemon stopped (pid 8888).");

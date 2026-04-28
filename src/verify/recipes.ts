@@ -116,7 +116,7 @@ export function getNodeWebBootstrapCommands(packageManager: string | null, appKi
 
 function parseHostPort(mapping: string): string | null {
   const match = mapping.trim().match(/^(\d+):(\d+)$/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 function inferPortFromCommand(command: string | undefined): string | undefined {
@@ -474,7 +474,7 @@ export function normalizeVerifyRecipe(value: unknown): VerifyRecipe | null {
 
 export function inferVerifySmokeUrl(settings?: SandboxSettings): string | null {
   const ports = settings?.ports ?? [];
-  if (ports.length !== 1) return null;
+  if (ports.length !== 1 || !ports[0]) return null;
   const hostPort = parseHostPort(ports[0]);
   return hostPort ? `http://127.0.0.1:${hostPort}` : null;
 }

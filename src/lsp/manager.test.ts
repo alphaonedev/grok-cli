@@ -96,7 +96,7 @@ describe("createWorkspaceLspManager", () => {
     ];
 
     const client = createFakeClient({
-      diagnostics: diagnostics[0].diagnostics,
+      diagnostics: diagnostics[0]!.diagnostics,
     });
 
     const manager = createWorkspaceLspManager(root, BASE_SETTINGS, {

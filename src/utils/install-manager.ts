@@ -163,7 +163,7 @@ export function parseChecksumsFile(contents: string): Map<string, string> {
     const line = rawLine.trim();
     if (!line) continue;
     const match = line.match(/^([a-fA-F0-9]{64})\s+\*?(.+)$/);
-    if (!match) continue;
+    if (!match || !match[1] || !match[2]) continue;
     result.set(match[2], match[1].toLowerCase());
   }
   return result;

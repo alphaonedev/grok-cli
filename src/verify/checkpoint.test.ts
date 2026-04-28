@@ -104,7 +104,7 @@ describe("verify checkpoints", () => {
     expect(result.guestWorkdir).toBe("/grok/verify/worktree");
     expect(execFileMock).toHaveBeenCalledTimes(1);
     expect(spawnMock).toHaveBeenCalledTimes(1);
-    const spawnArgs = spawnMock.mock.calls[0];
+    const spawnArgs = spawnMock.mock.calls[0]!;
     expect(spawnArgs[0]).toBe("shuru");
     const createArgs = spawnArgs[1] as string[];
     expect(createArgs.slice(0, 3)).toEqual(["checkpoint", "create", result.checkpointName!]);

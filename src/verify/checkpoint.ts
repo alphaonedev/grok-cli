@@ -130,7 +130,8 @@ async function listCheckpoints(cwd: string): Promise<string[]> {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => line.split(/\s+/)[0]);
+    .map((line) => line.split(/\s+/)[0] ?? "")
+    .filter(Boolean);
 }
 
 async function deleteCheckpoint(cwd: string, checkpointName: string): Promise<void> {

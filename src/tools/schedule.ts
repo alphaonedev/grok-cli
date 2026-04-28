@@ -489,7 +489,7 @@ function parseCronExpression(expr: string): CronExpression | null {
   const parts = expr.trim().split(/\s+/);
   if (parts.length !== 5) return null;
 
-  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+  const [minute, hour, dayOfMonth, month, dayOfWeek] = parts as [string, string, string, string, string];
   if (!validateCronField(minute, 0, 59)) return null;
   if (!validateCronField(hour, 0, 23)) return null;
   if (!validateCronField(dayOfMonth, 1, 31)) return null;
@@ -532,7 +532,7 @@ function parseCronPart(part: string, min: number, max: number, dayOfWeek: boolea
 
   const base = pieces[0];
   const step = pieces[1] ? Number.parseInt(pieces[1], 10) : 1;
-  if (!Number.isInteger(step) || step <= 0) return null;
+  if (!base || !Number.isInteger(step) || step <= 0) return null;
 
   if (base === "*") {
     return { start: min, end: max, step };
@@ -554,7 +554,7 @@ function parseCronPart(part: string, min: number, max: number, dayOfWeek: boolea
     return { start: normalizeCronValue(startRaw, dayOfWeek), end: normalizeCronValue(endRaw, dayOfWeek), step };
   }
 
-  const value = parseCronNumber(base, min, max, dayOfWeek);
+  const value = parseCronNumber(base ?? "", min, max, dayOfWeek);
   if (value === null) return null;
   return { start: value, end: value, step };
 }
