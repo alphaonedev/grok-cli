@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>grok-cli — AI Coding Agent Powered by xAI Grok | AlphaOne LLC</title>
-<meta name="description" content="Open-source AI coding agent with TOON compression, persistent memory, security hardening, and 10 custom sub-agents. 30-50% token savings. Built with Bun and React Ink. By AlphaOne LLC.">
+<meta name="description" content="Open-source AI coding agent with TOON compression, persistent memory via ai-memory MCP, security hardening, and 10 custom sub-agents. 30-50% token savings. Built with Bun and React Ink. By AlphaOne LLC.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -241,7 +241,7 @@ footer a { color: var(--muted); }
       </div>
       <div class="feature">
         <h4>Persistent Memory</h4>
-        <p>ai-memory MCP integration with session-scoped connections, auto-recall on startup, and compaction summary storage. Your agent remembers across sessions.</p>
+        <p>Powered by <a href="https://alphaonedev.github.io/ai-memory-mcp/"><strong>ai-memory MCP</strong></a> &mdash; AlphaOne's persistent memory server (97.8% R@5 on LongMemEval, pure SQLite FTS5, zero cloud dependencies). Session-scoped connections, auto-recall on startup, and compaction summary storage. Your agent remembers across sessions.</p>
       </div>
       <div class="feature">
         <h4>Security Hardening</h4>
@@ -294,8 +294,8 @@ footer a { color: var(--muted); }
 }</pre></div>
     <p style="color:var(--muted);font-size:0.85rem;margin-top:12px;">Full sub-agent instructions in <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/user-settings-example.json">user-settings-example.json</a>. See <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/CONFIGURATION.md">CONFIGURATION.md</a> for the complete guide.</p>
 
-    <h3 style="margin-top:32px;">ai-memory Integration (optional)</h3>
-    <p style="color:var(--muted);margin-bottom:12px;">Add persistent cross-session memory. Merge into the config above:</p>
+    <h3 style="margin-top:32px;"><a href="https://alphaonedev.github.io/ai-memory-mcp/">ai-memory MCP</a> Integration (optional)</h3>
+    <p style="color:var(--muted);margin-bottom:12px;">Add persistent cross-session memory via <a href="https://alphaonedev.github.io/ai-memory-mcp/">ai-memory</a>, AlphaOne's MCP-native memory server. Install with <code style="background:var(--surface);padding:2px 6px;border-radius:4px;">brew install alphaonedev/homebrew-tap/ai-memory</code>, then merge into the config above:</p>
     <div class="config-block"><pre>{
   <span class="key">"mcp"</span>: {
     <span class="key">"servers"</span>: [{
@@ -346,7 +346,7 @@ footer a { color: var(--muted); }
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/HEADLESS_JSON_SPEC.md">Headless JSON Spec</a> &mdash; JSONL stream schema for <code>--format json</code> with jq cookbook<br>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/RELEASE_SIGNING.md">Release Signing</a> &mdash; macOS codesign + notarization setup<br>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/docs/user-settings-example.json">Example Configuration</a> &mdash; copy-paste ready template<br>
-      <a href="https://github.com/alphaonedev/ai-memory-mcp/blob/main/docs/GROK_INTEGRATION.md">ai-memory Integration</a> &mdash; persistent memory setup<br>
+      <a href="https://alphaonedev.github.io/ai-memory-mcp/">ai-memory MCP</a> &mdash; persistent memory server (<a href="https://github.com/alphaonedev/ai-memory-mcp/blob/main/docs/GROK_INTEGRATION.md">grok-cli setup guide</a>)<br>
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/AGENTS.md">Sub-Agents Guide</a> &mdash; built-in and custom agents<br>
       <a href="https://github.com/alphaonedev/grok-cli/releases">Releases</a> &middot;
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/CHANGELOG.md">Changelog</a>
@@ -379,7 +379,7 @@ footer a { color: var(--muted); }
       Fork of <a href="https://github.com/superagent-ai/grok-cli">superagent-ai/grok-cli</a> &middot;
       <a href="https://github.com/alphaonedev/grok-cli/blob/main/LICENSE">MIT License</a> &middot;
       <a href="https://github.com/alphaonedev/grok-cli">GitHub</a> &middot;
-      <a href="https://github.com/alphaonedev/ai-memory-mcp">ai-memory</a>
+      <a href="https://alphaonedev.github.io/ai-memory-mcp/">ai-memory MCP</a>
     </p>
   </div>
 </footer>

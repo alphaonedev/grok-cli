@@ -12,7 +12,7 @@ Fork of [superagent-ai/grok-cli](https://github.com/superagent-ai/grok-cli) with
 
 - **Ink React terminal UI** --- full markdown rendering with headers, bold, italic, tables, code blocks, lists, links, blockquotes. Vivid syntax highlighting for 25+ languages (Python, JavaScript, TypeScript, Rust, Go, Java, C/C++, Ruby, PHP, Bash, and more)
 - **TOON compression** --- 30-50% token savings on all structured tool results
-- **ai-memory MCP integration** --- persistent cross-session memory with vector search and auto-recall
+- **Persistent memory via [ai-memory MCP](https://alphaonedev.github.io/ai-memory-mcp/)** --- AlphaOne's MCP-native memory server (97.8% R@5 on LongMemEval, pure SQLite FTS5, zero cloud dependencies). Session-scoped connections, auto-recall on startup, and compaction summary storage
 - **Session-scoped MCP connections** --- connect once per session, not per message
 - **MCP tools in all modes** --- memory works in plan, ask, and agent modes
 - **Security hardening** --- AES-256-GCM storage encryption, MCP tool name collision prevention, description sanitization, 16 red team fixes
@@ -168,12 +168,16 @@ Full sub-agent instructions in [docs/user-settings-example.json](docs/user-setti
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the complete guide.
 
-### 3. ai-memory (optional, recommended)
+### 3. [ai-memory MCP](https://alphaonedev.github.io/ai-memory-mcp/) (optional, recommended)
 
-Add persistent cross-session memory:
+Add persistent cross-session memory via AlphaOne's MCP-native memory server.
+Documentation: <https://alphaonedev.github.io/ai-memory-mcp/>
 
 ```bash
-# Install ai-memory
+# Install via Homebrew (recommended)
+brew install alphaonedev/homebrew-tap/ai-memory
+
+# Or one-line install
 curl -fsSL https://raw.githubusercontent.com/alphaonedev/ai-memory-mcp/main/install.sh | bash
 ```
 
