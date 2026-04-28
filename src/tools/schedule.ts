@@ -1,11 +1,112 @@
 import { spawn } from "child_process";
-import { closeSync, promises as fs, openSync } from "fs";
+import { closeSync, promises as fs, openSync, realpathSync, statSync } from "fs";
 import os from "os";
 import path from "path";
 import { getCurrentModel } from "../utils/settings";
 
 const SCHEDULES_DIR = path.join(os.homedir(), ".grok", "schedules");
 const SCHEDULE_DAEMON_PID_PATH = path.join(os.homedir(), ".grok", "daemon.pid");
+
+/**
+ * Pass-through env vars for spawned daemon/headless children. Avoids
+ * leaking unrelated secrets (e.g. TELEGRAM_BOT_TOKEN, OPENAI_API_KEY)
+ * into a schedule daemon whose env is visible via /proc on Linux and
+ * shows up in process listings on shared machines.
+ */
+const ENV_ALLOWLIST_EXACT = new Set([
+  "PATH",
+  "HOME",
+  "SHELL",
+  "USER",
+  "LOGNAME",
+  "LANG",
+  "TERM",
+  "TMPDIR",
+  "TZ",
+  "PWD",
+  "EDITOR",
+  "VISUAL",
+  "COLORTERM",
+]);
+const ENV_ALLOWLIST_PREFIXES = ["GROK_", "NODE_", "BUN_", "LC_", "XDG_"];
+const ENV_BLOCKLIST = new Set([
+  // Never propagate, even if they slip past prefix matches.
+  "TELEGRAM_BOT_TOKEN",
+  "OPENAI_API_KEY",
+  "ANTHROPIC_API_KEY",
+  "AWS_SECRET_ACCESS_KEY",
+  "AWS_SESSION_TOKEN",
+  "GROK_DAEMON_CHILD",
+]);
+
+function buildSpawnEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  const out: NodeJS.ProcessEnv = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value !== "string") continue;
+    if (ENV_BLOCKLIST.has(key)) continue;
+    if (ENV_ALLOWLIST_EXACT.has(key) || ENV_ALLOWLIST_PREFIXES.some((p) => key.startsWith(p))) {
+      out[key] = value;
+    }
+  }
+  return { ...out, ...extra };
+}
+
+/**
+ * Sensitive system roots a schedule must never target. Symlinks are
+ * resolved before this check so an attacker cannot bypass via a link.
+ */
+const SCHEDULE_FORBIDDEN_ROOTS = [
+  "/etc",
+  "/usr",
+  "/sbin",
+  "/bin",
+  "/boot",
+  "/proc",
+  "/sys",
+  "/dev",
+  "/root",
+  "/System",
+  "/Library",
+  "/Applications",
+  "/private/etc",
+  "/private/usr",
+  "/private/sbin",
+  "/private/bin",
+  "/private/System",
+];
+
+/**
+ * Validate a schedule's working directory before spawn. Resolves
+ * symlinks, requires an existing directory, and rejects sensitive
+ * system roots so a poisoned schedule cannot make the agent operate
+ * against /etc, /System, etc.
+ */
+export function validateScheduleDirectory(directory: string): string {
+  if (!directory || typeof directory !== "string") {
+    throw new Error("Schedule directory is required.");
+  }
+  let resolved: string;
+  try {
+    resolved = realpathSync(path.resolve(directory));
+  } catch {
+    throw new Error(`Schedule directory does not exist: ${directory}`);
+  }
+  let stat: ReturnType<typeof statSync>;
+  try {
+    stat = statSync(resolved);
+  } catch {
+    throw new Error(`Schedule directory cannot be read: ${directory}`);
+  }
+  if (!stat.isDirectory()) {
+    throw new Error(`Schedule directory is not a directory: ${directory}`);
+  }
+  for (const forbidden of SCHEDULE_FORBIDDEN_ROOTS) {
+    if (resolved === forbidden || resolved.startsWith(`${forbidden}${path.sep}`)) {
+      throw new Error(`Refusing to schedule against sensitive system path: ${resolved} (resolved from ${directory}).`);
+    }
+  }
+  return resolved;
+}
 
 export interface StoredSchedule {
   id: string;
@@ -318,7 +419,7 @@ export async function startScheduleDaemon(cwd = process.cwd()): Promise<Schedule
     cwd,
     detached: true,
     stdio: "ignore",
-    env: { ...process.env, FORCE_COLOR: "0", GROK_DAEMON_CHILD: "1" },
+    env: buildSpawnEnv({ FORCE_COLOR: "0", GROK_DAEMON_CHILD: "1" }),
   });
   child.unref();
 
@@ -391,14 +492,18 @@ export async function writeStoredSchedule(schedule: StoredSchedule): Promise<voi
 }
 
 export async function startDetachedHeadlessRun(options: HeadlessRunOptions): Promise<number | null> {
+  // Refuse to spawn against an unvetted schedule directory. Catches
+  // stored-schedule poisoning where `directory` was later mutated to
+  // a system path or symlink outside HOME.
+  const safeCwd = validateScheduleDirectory(options.directory);
   await fs.mkdir(path.dirname(options.logPath), { recursive: true });
   const logFd = openSync(options.logPath, "a");
   try {
     const child = spawn(process.execPath, [...resolveCliArgs(), ...buildHeadlessCliArgs(options)], {
-      cwd: options.directory,
+      cwd: safeCwd,
       detached: true,
       stdio: ["ignore", logFd, logFd],
-      env: { ...process.env, FORCE_COLOR: "0", ...options.env },
+      env: buildSpawnEnv({ FORCE_COLOR: "0", ...options.env }),
     });
     child.unref();
     return child.pid ?? null;
@@ -576,12 +681,8 @@ function normalizeCronValue(value: number, dayOfWeek: boolean): number {
 }
 
 async function resolveScheduleDirectory(directory: string | undefined, cwd: string): Promise<string> {
-  const resolved = directory ? path.resolve(cwd, directory) : cwd;
-  const stat = await fs.stat(resolved).catch(() => null);
-  if (!stat?.isDirectory()) {
-    throw new Error(`Schedule directory does not exist: ${resolved}`);
-  }
-  return resolved;
+  const candidate = directory ? path.resolve(cwd, directory) : cwd;
+  return validateScheduleDirectory(candidate);
 }
 
 async function listScheduleFiles(): Promise<string[]> {

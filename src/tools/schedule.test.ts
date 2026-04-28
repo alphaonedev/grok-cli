@@ -102,7 +102,10 @@ describe("schedule helpers", () => {
     expect(result.schedule).toMatchObject({
       id,
       model: "grok-test-model",
-      directory: cwd,
+      // validateScheduleDirectory resolves symlinks (e.g. /var -> /private/var
+      // on macOS) so the stored directory is the realpath of cwd, not cwd
+      // itself.
+      directory: fs.realpathSync(cwd),
       cron: "0 9 * * 1-5",
       enabled: true,
     });
