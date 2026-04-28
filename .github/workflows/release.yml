@@ -45,6 +45,19 @@ jobs:
       - name: Compile standalone binary
         run: bun build --compile --outfile "release/${{ matrix.build_output }}" ./src/index.ts
 
+      # Ad-hoc sign macOS binary unconditionally. Without ANY signature
+      # the Apple Silicon kernel SIGKILLs the binary the moment it's
+      # launched ("main executable failed strict validation" — the
+      # exact failure mode the original v1.7.0 release hit). An ad-hoc
+      # signature (`-s -`) satisfies the kernel check; Gatekeeper will
+      # still warn on first run for downloads that carry the
+      # com.apple.quarantine attribute, but the binary actually runs.
+      # The full Developer ID + notarize step below replaces this
+      # ad-hoc signature when the secrets are configured.
+      - name: Ad-hoc sign (macOS)
+        if: runner.os == 'macOS'
+        run: codesign --force --sign - "release/${{ matrix.build_output }}"
+
       # macOS code signing + notarization (optional). Requires the
       # following GitHub Actions secrets to be set on the repository:
       #   APPLE_DEVELOPER_ID_APPLICATION_CERT_BASE64

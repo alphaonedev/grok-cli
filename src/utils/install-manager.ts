@@ -211,6 +211,19 @@ export async function runScriptManagedUpdate(currentVersion: string): Promise<Sc
     fs.chmodSync(staging, 0o755);
     fs.renameSync(staging, context.binaryPath);
 
+    // Strip macOS quarantine so the next launch doesn't trigger the
+    // Gatekeeper "cannot verify developer" warning. Best-effort.
+    if (process.platform === "darwin") {
+      try {
+        spawn("xattr", ["-d", "com.apple.quarantine", context.binaryPath], { stdio: "ignore" }).on(
+          "error",
+          () => undefined,
+        );
+      } catch {
+        /* xattr not present; ignore */
+      }
+    }
+
     saveScriptInstallMetadata({
       ...context.metadata,
       version: release.version,

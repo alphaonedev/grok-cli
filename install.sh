@@ -317,6 +317,20 @@ install_downloaded_release() {
   cp "$binary_file" "$staging"
   [[ "$TARGET" != windows-* ]] && chmod 755 "$staging"
   mv -f "$staging" "$target"
+
+  post_install_macos_unquarantine "$target"
+}
+
+# Strip macOS quarantine so the binary launches without a Gatekeeper
+# warning. curl-piped installs don't normally set this attribute, but
+# users who run install.sh on a binary they downloaded via Safari/Chrome
+# (with --binary) hit it — defensive cleanup.
+post_install_macos_unquarantine() {
+  local target="$1"
+  if [[ "$TARGET" != darwin-* ]]; then return; fi
+  if ! command -v xattr >/dev/null 2>&1; then return; fi
+  xattr -d com.apple.quarantine "$target" 2>/dev/null || true
+  xattr -c "$target" 2>/dev/null || true
 }
 
 install_local_binary() {
@@ -326,6 +340,7 @@ install_local_binary() {
   fi
   cp "$binary_path" "${INSTALL_DIR}/${BINARY_NAME}"
   [[ "$TARGET" != windows-* ]] && chmod 755 "${INSTALL_DIR}/${BINARY_NAME}"
+  post_install_macos_unquarantine "${INSTALL_DIR}/${BINARY_NAME}"
 }
 
 resolve_installed_version() {

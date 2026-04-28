@@ -58,6 +58,24 @@ bun run build:binary
 # Binary at: dist/grok-standalone
 ```
 
+### macOS: "cannot verify developer" warning?
+
+The release binaries are **ad-hoc signed** but not yet notarized by
+Apple (notarization needs an Apple Developer Program membership we
+haven't enrolled in yet — coming soon). The binary launches normally
+on Apple Silicon without any tweak; if you downloaded it through a
+browser instead of via `install.sh` and macOS shows a Gatekeeper
+warning, clear the quarantine attribute once:
+
+```bash
+xattr -d com.apple.quarantine ~/.grok/bin/grok
+```
+
+Or right-click the binary in Finder → **Open** the first time,
+then "Open" the warning dialog. From then on, Gatekeeper trusts it.
+The `install.sh` script handles this automatically for curl-piped
+installs.
+
 ### Self-management (script-installed only)
 
 ```bash
